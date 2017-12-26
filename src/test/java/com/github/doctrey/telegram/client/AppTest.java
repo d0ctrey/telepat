@@ -1,4 +1,4 @@
-package com.github.doctrey;
+package com.github.doctrey.telegram.client;
 
 import junit.framework.Test;
 import junit.framework.TestCase;

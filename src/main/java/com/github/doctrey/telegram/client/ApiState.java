@@ -1,5 +1,6 @@
-package com.github.doctrey;
+package com.github.doctrey.telegram.client;
 
+import com.github.doctrey.telegram.client.api.TLPersistence;
 import org.telegram.api.updates.TLUpdatesState;
 
 /**

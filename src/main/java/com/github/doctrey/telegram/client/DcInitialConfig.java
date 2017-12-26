@@ -1,4 +1,4 @@
-package com.github.doctrey;
+package com.github.doctrey.telegram.client;
 
 /**
  * Created by ex3ndr on 22.11.13.

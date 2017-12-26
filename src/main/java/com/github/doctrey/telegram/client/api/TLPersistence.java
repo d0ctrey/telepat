@@ -1,4 +1,4 @@
-package com.github.doctrey;
+package com.github.doctrey.telegram.client.api;
 
 import org.telegram.api.engine.Logger;
 import org.telegram.tl.TLObject;

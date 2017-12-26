@@ -1,5 +1,6 @@
-package com.github.doctrey;
+package com.github.doctrey.telegram.client;
 
+import com.github.doctrey.telegram.client.api.*;
 import org.telegram.api.TLConfig;
 import org.telegram.api.TLDcOption;
 import org.telegram.api.auth.TLAuthorization;

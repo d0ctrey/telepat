@@ -1,22 +1,25 @@
-package com.github.doctrey;
+package com.github.doctrey.telegram.client;
 
-import com.github.doctrey.handler.TLAbsUpdatesHandler;
+import com.github.doctrey.telegram.client.update.AbsUpdatesHandler;
+import com.github.doctrey.telegram.client.update.impl.UpdateShortHandler;
+import com.github.doctrey.telegram.client.update.impl.UpdatesHandler;
+import com.github.doctrey.telegram.client.update.impl.UpdatesTooLongHandler;
 import org.telegram.api.TLConfig;
 import org.telegram.api.TLNearestDc;
 import org.telegram.api.auth.TLAuthorization;
 import org.telegram.api.auth.TLSentCode;
-import org.telegram.api.engine.ApiCallback;
-import org.telegram.api.engine.AppInfo;
-import org.telegram.api.engine.RpcException;
-import org.telegram.api.engine.TelegramApi;
+import org.telegram.api.engine.*;
 import org.telegram.api.functions.auth.TLRequestAuthSendCode;
 import org.telegram.api.functions.auth.TLRequestAuthSignIn;
 import org.telegram.api.functions.auth.TLRequestAuthSignUp;
 import org.telegram.api.functions.help.TLRequestHelpGetConfig;
 import org.telegram.api.functions.help.TLRequestHelpGetNearestDc;
+import org.telegram.api.functions.messages.TLRequestMessagesGetDialogs;
 import org.telegram.api.functions.updates.TLRequestUpdatesGetState;
+import org.telegram.api.messages.dialogs.TLAbsDialogs;
 import org.telegram.api.updates.TLAbsUpdates;
 import org.telegram.api.updates.TLUpdatesState;
+import org.telegram.api.updates.TLUpdatesTooLong;
 import org.telegram.tl.TLMethod;
 import org.telegram.tl.TLObject;
 
@@ -25,14 +28,13 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.*;
 import java.util.concurrent.TimeoutException;
 
 public class TelegramClient {
 
     static TelegramApi api;
-    static List<TLAbsUpdatesHandler> updatesHandlers = new ArrayList<>();
+    static List<AbsUpdatesHandler> updatesHandlers = new ArrayList<>();
 
     private static final int API_ID = 33986;
     private static final String API_HASH = "cbf75f71f7b931f7d137a60d318590dd";
@@ -89,35 +91,19 @@ public class TelegramClient {
         /*if("https://telegram.me/joinchat/Cs1ppj6BBdQNe9LTcafLqg".startsWith("https://telegram.me/joinchat/"))
             hash = "https://telegram.me/joinchat/Cs1ppj6BBdQNe9LTcafLqg".substring("https://telegram.me/joinchat/".length() - 1);
         doRpc(new TLRequestUsersGetFullUser(new TLInputUserForeign());*/
-        /*api.doRpcCall(new TLRequestMessagesGetDialogs(0, Integer.MAX_VALUE, 100), new RpcCallbackEx<TLAbsDialogs>() {
-            @Override
-            public void onConfirmed() {
 
-            }
-
-            @Override
-            public void onResult(TLAbsDialogs result) {
-                System.out.println(result);
-            }
-
-            @Override
-            public void onError(int errorCode, String message) {
-
-            }
-        });*/
-
-        /*updatesHandlers.add(new TLUpdatesHandler(api));
-        updatesHandlers.add(new TLUpdateShortHandler(api));
-        updatesHandlers.add(new TLUpdatesTooLongHandler(api));
+        updatesHandlers.add(new UpdatesHandler(api));
+        updatesHandlers.add(new UpdateShortHandler(api));
+        updatesHandlers.add(new UpdatesTooLongHandler(api));
         // check for updates since restart
         processUpdates(new TLUpdatesTooLong());
 
         executorService = Executors.newSingleThreadScheduledExecutor();
-        executorService.scheduleAtFixedRate(() -> processUpdates(new TLUpdatesTooLong()), 5, 30, TimeUnit.SECONDS);*/
+        executorService.scheduleAtFixedRate(() -> processUpdates(new TLUpdatesTooLong()), 5, 30, TimeUnit.SECONDS);
     }
 
-    private synchronized static void processUpdates(TLAbsUpdates updates) {
-        for (TLAbsUpdatesHandler updatesHandler : updatesHandlers) {
+    private static void processUpdates(TLAbsUpdates updates) {
+        for (AbsUpdatesHandler updatesHandler : updatesHandlers) {
             if (updatesHandler.canProcess(updates.getClassId()))
                 updatesHandler.processUpdates(updates);
         }
