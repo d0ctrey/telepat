@@ -13,7 +13,8 @@ import org.telegram.api.peer.TLAbsPeer;
 import org.telegram.api.update.TLUpdateChannelNewMessage;
 import org.telegram.api.update.TLUpdateNewMessage;
 import org.telegram.api.updates.TLUpdates;
-import org.telegram.api.user.TLUser;
+
+import java.util.Optional;
 
 
 /**
@@ -43,13 +44,12 @@ public class NewMessageHandler implements AbsUpdateHandler<TLUpdates, TLUpdateCh
             TLMessage message = (TLMessage) absMessage;
             TLAbsPeer toId = message.getToId();
             TLChannel channel = (TLChannel) findChannel(updatesContext, toId.getId());
-            messageService.markChannelAsRead(updateChannelNewMessage.getMessage(), channel);
+            messageService.markChannelHistoryAsRead(updateChannelNewMessage.getMessage(), channel);
         }
-
-
     }
 
     public TLAbsChat findChannel(TLUpdates updates, int channelId) {
-        return updates.getChats().stream().filter(x -> x.getId() == channelId).findFirst().get();
+        Optional<TLAbsChat> first = updates.getChats().stream().filter(x -> x.getId() == channelId).findFirst();
+        return first.orElse(null);
     }
 }

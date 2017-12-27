@@ -5,8 +5,10 @@ import com.github.doctrey.telegram.client.update.AbsUpdateHandler;
 import com.github.doctrey.telegram.client.update.AbsUpdatesHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.telegram.api.contact.TLContact;
 import org.telegram.api.engine.TelegramApi;
 import org.telegram.api.functions.users.TLRequestUsersGetFullUser;
+import org.telegram.api.input.user.TLInputUser;
 import org.telegram.api.update.TLUpdateUserStatus;
 import org.telegram.api.updates.TLUpdateShort;
 import org.telegram.api.user.TLUser;
@@ -53,14 +55,16 @@ public class UserStatusHandler implements AbsUpdateHandler<TLUpdateShort, TLUpda
             return;
 
         String finalStatusString = statusString;
-        /*TLRequestUsersGetFullUser getFullUser = new TLRequestUsersGetFullUser();
-        getFullUser.setId();
+        TLRequestUsersGetFullUser getFullUser = new TLRequestUsersGetFullUser();
+        TLInputUser inputUser = new TLInputUser();
+        inputUser.setUserId(userId);
+        getFullUser.setId(inputUser);
         api.doRpcCall(getFullUser, new AbstractRcpCallback<TLUserFull>() {
             @Override
             public void onResult(TLUserFull result) {
-                if(result.getUser() instanceof TLUser)
-                    System.out.println("### " + ((TLUser) result.getUser()).getFirstName() + " " + ((TLUser) result.getUser()).getLastName() + " is " + finalStatusString + " ###");
+                if (result.getUser() instanceof TLUser)
+                    System.out.println("##### " + ((TLUser) result.getUser()).getFirstName() + " " + ((TLUser) result.getUser()).getLastName() + " is " + finalStatusString + " #####");
             }
-        });*/
+        });
     }
 }

@@ -22,6 +22,6 @@ public abstract class AbstractRcpCallback<T extends TLObject> implements RpcCall
 
     @Override
     public void onError(int errorCode, String errorText) {
-        LOGGER.error("RCP call failed with error {} {}", errorCode, errorText);
+        LOGGER.error("RCP call failed with error -----> {} {}", errorCode, errorText);
     }
 }
