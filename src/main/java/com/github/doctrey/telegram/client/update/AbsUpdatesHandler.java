@@ -8,6 +8,6 @@ import org.telegram.api.updates.TLAbsUpdates;
  */
 public interface AbsUpdatesHandler<T extends TLAbsUpdates> {
 
-    boolean canProcess(int updateClassId);
+    boolean canProcess(int updatesClassId);
     void processUpdates(T updates);
 }

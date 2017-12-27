@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.telegram.api.engine.TelegramApi;
 import org.telegram.api.update.TLAbsUpdate;
-import org.telegram.api.updates.TLAbsUpdates;
 import org.telegram.api.updates.TLUpdates;
 
 import java.util.ArrayList;
@@ -28,8 +27,8 @@ public class UpdatesHandler implements AbsUpdatesHandler<TLUpdates> {
     }
 
     @Override
-    public boolean canProcess(int updateClassId) {
-        return TLUpdates.CLASS_ID == updateClassId;
+    public boolean canProcess(int updatesClassId) {
+        return TLUpdates.CLASS_ID == updatesClassId;
     }
 
     @Override

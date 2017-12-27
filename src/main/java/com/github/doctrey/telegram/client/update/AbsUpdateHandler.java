@@ -9,5 +9,5 @@ import org.telegram.api.updates.TLAbsUpdates;
 public interface AbsUpdateHandler<S extends TLAbsUpdates, T extends TLAbsUpdate> {
 
     boolean canProcess(int updateClassId);
-    void processUpdate(S updates, T update);
+    void processUpdate(S updatesContext, T thisUpdate);
 }

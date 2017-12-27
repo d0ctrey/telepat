@@ -4,19 +4,22 @@ import com.github.doctrey.telegram.client.facade.MessageService;
 import com.github.doctrey.telegram.client.update.AbsUpdateHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.telegram.api.chat.TLAbsChat;
+import org.telegram.api.chat.channel.TLChannel;
 import org.telegram.api.engine.TelegramApi;
 import org.telegram.api.message.TLAbsMessage;
 import org.telegram.api.message.TLMessage;
 import org.telegram.api.peer.TLAbsPeer;
 import org.telegram.api.update.TLUpdateChannelNewMessage;
 import org.telegram.api.update.TLUpdateNewMessage;
+import org.telegram.api.updates.TLUpdates;
 import org.telegram.api.user.TLUser;
 
 
 /**
  * Created by s_tayari on 12/24/2017.
  */
-public class NewMessageHandler implements AbsUpdateHandler<TLUpdateNewMessage> {
+public class NewMessageHandler implements AbsUpdateHandler<TLUpdates, TLUpdateChannelNewMessage> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NewMessageHandler.class);
 
@@ -34,20 +37,19 @@ public class NewMessageHandler implements AbsUpdateHandler<TLUpdateNewMessage> {
     }
 
     @Override
-    public void processUpdate(TLUpdateNewMessage updateNewMessage) {
-        TLAbsMessage absMessage = updateNewMessage.getMessage();
+    public void processUpdate(TLUpdates updatesContext, TLUpdateChannelNewMessage updateChannelNewMessage) {
+        TLAbsMessage absMessage = updateChannelNewMessage.getMessage();
         if(absMessage instanceof TLMessage) {
             TLMessage message = (TLMessage) absMessage;
             TLAbsPeer toId = message.getToId();
-
+            TLChannel channel = (TLChannel) findChannel(updatesContext, toId.getId());
+            messageService.markChannelAsRead(updateChannelNewMessage.getMessage(), channel);
         }
-        messageService.markAsRead(updateNewMessage.getMessage());
 
 
     }
 
-    public <T> TLUser findUser(TLUpdateNewMessage updateNewMessage) {
-
-        return null;
+    public TLAbsChat findChannel(TLUpdates updates, int channelId) {
+        return updates.getChats().stream().filter(x -> x.getId() == channelId).findFirst().get();
     }
 }

@@ -26,14 +26,14 @@ public class UpdateShortHandler implements AbsUpdatesHandler<TLUpdateShort> {
     }
 
     @Override
-    public boolean canProcess(int updateClassId) {
-        return TLUpdateShort.CLASS_ID == updateClassId;
+    public boolean canProcess(int updatesClassId) {
+        return TLUpdateShort.CLASS_ID == updatesClassId;
     }
 
     @Override
     public void processUpdates(TLUpdateShort updateShort) {
         for(AbsUpdateHandler updateHandler : updateHandlers) {
-            if (updateHandler.canProcess(updateShort.getClassId())) {
+            if (updateHandler.canProcess(updateShort.getUpdate().getClassId())) {
                 updateHandler.processUpdate(updateShort, updateShort.getUpdate());
             }
         }
