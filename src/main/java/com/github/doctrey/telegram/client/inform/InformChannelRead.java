@@ -6,8 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.telegram.api.engine.TelegramApi;
 import org.telegram.api.functions.messages.TLRequestMessagesSendMessage;
-import org.telegram.api.input.chat.TLInputChannel;
 import org.telegram.api.input.peer.TLAbsInputPeer;
+import org.telegram.api.input.peer.TLInputPeerChannel;
 import org.telegram.api.input.peer.TLInputPeerChat;
 import org.telegram.api.updates.TLAbsUpdates;
 
@@ -17,7 +17,7 @@ import java.util.List;
 /**
  * Created by Soheil on 12/28/17.
  */
-public class InformChannelRead implements InformUserService<TLInputChannel> {
+public class InformChannelRead implements InformUserService<TLInputPeerChannel> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InformChannelRead.class);
 
@@ -28,7 +28,7 @@ public class InformChannelRead implements InformUserService<TLInputChannel> {
     }
 
     @Override
-    public void inform(TLInputChannel object) {
+    public void inform(TLInputPeerChannel object) {
         findPeers().forEach(absInputPeer -> {
             TLRequestMessagesSendMessage sendMessage = new TLRequestMessagesSendMessage();
             sendMessage.setRandomId(MessageUtils.generateRandomId());
@@ -42,7 +42,6 @@ public class InformChannelRead implements InformUserService<TLInputChannel> {
                 }
             });
         });
-
     }
 
     private List<TLAbsInputPeer> findPeers() {
