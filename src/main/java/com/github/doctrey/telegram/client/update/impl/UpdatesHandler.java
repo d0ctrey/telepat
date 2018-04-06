@@ -23,7 +23,7 @@ public class UpdatesHandler implements AbsUpdatesHandler<TLUpdates> {
 
     public UpdatesHandler(TelegramApi api) {
         this.api = api;
-        updateHandlers.add(new NewMessageHandler(api));
+        updateHandlers.add(new ChannelNewMessageHandler(api));
     }
 
     @Override
