@@ -6,11 +6,11 @@ import org.telegram.api.updates.TLUpdatesState;
 /**
  * Created by Soheil on 12/25/17.
  */
-public class ApiState extends TLPersistence<TLUpdatesState> {
+public class ApiUpdateState extends TLPersistence<TLUpdatesState> {
 
     private static final String STATE_FILE_NAME = "state.bin";
 
-    public ApiState(String phoneNumber) {
+    public ApiUpdateState(String phoneNumber) {
         super(phoneNumber, STATE_FILE_NAME, TLUpdatesState.class);
     }
 

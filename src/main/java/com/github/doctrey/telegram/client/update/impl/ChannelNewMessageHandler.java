@@ -2,7 +2,6 @@ package com.github.doctrey.telegram.client.update.impl;
 
 import com.github.doctrey.telegram.client.facade.MessageService;
 import com.github.doctrey.telegram.client.update.AbsUpdateHandler;
-import com.github.doctrey.telegram.client.util.ConnectionPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.telegram.api.chat.TLAbsChat;
@@ -15,10 +14,6 @@ import org.telegram.api.update.TLUpdateChannelNewMessage;
 import org.telegram.api.update.TLUpdateNewMessage;
 import org.telegram.api.updates.TLUpdates;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Optional;
 
 
@@ -56,7 +51,8 @@ public class ChannelNewMessageHandler implements AbsUpdateHandler<TLUpdates, TLU
     }
 
     private boolean isSubscribed(int channelId) {
-        Connection connection = null;
+        return channelId == 1343528547;
+        /*Connection connection = null;
         PreparedStatement statement = null;
         ResultSet rs = null;
         try {
@@ -88,7 +84,7 @@ public class ChannelNewMessageHandler implements AbsUpdateHandler<TLUpdates, TLU
 
                 }
 
-        }
+        }*/
     }
 
     private TLAbsChat findChannel(TLUpdates updates, int channelId) {

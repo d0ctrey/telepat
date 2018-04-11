@@ -1,20 +1,16 @@
 package com.github.doctrey.telegram.client.facade;
 
 import com.github.doctrey.telegram.client.AbstractRcpCallback;
-import com.github.doctrey.telegram.client.ApiState;
-import com.github.doctrey.telegram.client.ApiStorage;
+import com.github.doctrey.telegram.client.DbApiStorage;
+import com.github.doctrey.telegram.client.ApiUpdateState;
 import com.github.doctrey.telegram.client.difference.DifferenceProcessor;
 import com.github.doctrey.telegram.client.difference.NewMessageProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.telegram.api.engine.TelegramApi;
 import org.telegram.api.functions.updates.TLRequestUpdatesGetDifference;
-import org.telegram.api.message.TLAbsMessage;
 import org.telegram.api.updates.TLUpdatesState;
 import org.telegram.api.updates.difference.TLAbsDifference;
-import org.telegram.api.updates.difference.TLDifference;
-import org.telegram.api.updates.difference.TLDifferenceSlice;
-import org.telegram.tl.TLVector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,18 +23,18 @@ public class UpdateService {
     private static final Logger LOGGER = LoggerFactory.getLogger(UpdateService.class);
 
     private TelegramApi api;
-    private ApiStorage apiStorage;
+    private DbApiStorage apiStateStorage;
     private List<DifferenceProcessor> differenceProcessors = new ArrayList<>();
 
     public UpdateService(TelegramApi api) {
         this.api = api;
-        this.apiStorage = (ApiStorage) api.getState();
+        this.apiStateStorage = (DbApiStorage) api.getState();
         this.differenceProcessors.add(new NewMessageProcessor(api));
     }
 
     public void getRecentUpdates() {
-        ApiState apiState = new ApiState(apiStorage.getObj().getPhone().replaceAll("\\+", ""));
-        TLUpdatesState lastState = apiState.getObj();
+        ApiUpdateState apiUpdateState = new ApiUpdateState(apiStateStorage.getObj().getPhone().replaceAll("\\+", ""));
+        TLUpdatesState lastState = apiUpdateState.getObj();
 
         TLRequestUpdatesGetDifference getDifference = new TLRequestUpdatesGetDifference();
         getDifference.setDate(lastState.getDate());

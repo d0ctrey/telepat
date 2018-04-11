@@ -42,6 +42,7 @@ public class RunnableApi implements Runnable {
     private static final int API_ID = 33986;
     private static final String API_HASH = "cbf75f71f7b931f7d137a60d318590dd";
     private static final String PHONE_NUMBER = "+989123106718";
+    private String phoneNumber;
 
     public class DefaultApiCallback implements ApiCallback {
 
@@ -61,29 +62,35 @@ public class RunnableApi implements Runnable {
 
     @Override
     public void run() {
-        ApiStorage apiStorage = new ApiStorage(PHONE_NUMBER.replaceAll("\\+", ""));
-        api = new TelegramApi(apiStorage, new AppInfo(API_ID,
+        DbApiStorage apiStateStorage = null;
+        try {
+            apiStateStorage = new DbApiStorage(phoneNumber);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        api = new TelegramApi(apiStateStorage, new AppInfo(API_ID,
                 System.getenv("TL_DEVICE_MODEL"), System.getenv("TL_DEVICE_VERSION"), "0.0.1", "en"), new DefaultApiCallback());
 
-        if (!apiStorage.isAuthenticated()) {
+        if (!apiStateStorage.isAuthenticated()) {
             TLConfig config = doRpc(new TLRequestHelpGetConfig(), false);
-            apiStorage.updateSettings(config);
+            apiStateStorage.updateSettings(config);
             api.resetConnectionInfo();
 
             TLNearestDc tlNearestDc = doRpc(new TLRequestHelpGetNearestDc(), false);
             switchToDc(tlNearestDc.getNearestDc());
 
             TLAuthorization authorization = handleRegistration();
-            apiStorage.doAuth(authorization);
-            apiStorage.setAuthenticated(api.getState().getPrimaryDc(), true);
+            apiStateStorage.doAuth(authorization);
+            apiStateStorage.setAuthenticated(api.getState().getPrimaryDc(), true);
 
         }
 
-        ApiState apiState = new ApiState(PHONE_NUMBER.replaceAll("\\+", ""));
-        if (apiState.getObj().getDate() == 0) {
+        ApiUpdateState apiUpdateState = new ApiUpdateState(PHONE_NUMBER.replaceAll("\\+", ""));
+        if (apiUpdateState.getObj().getDate() == 0) {
             try {
                 TLUpdatesState tlState = api.doRpcCall(new TLRequestUpdatesGetState());
-                apiState.updateState(tlState);
+                apiUpdateState.updateState(tlState);
             } catch (IOException | TimeoutException e) {
                 e.printStackTrace();
             }
@@ -189,5 +196,9 @@ public class RunnableApi implements Runnable {
             e.printStackTrace();
             switchToDc(dc);
         }
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
     }
 }
