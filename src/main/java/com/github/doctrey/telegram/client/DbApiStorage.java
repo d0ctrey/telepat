@@ -12,9 +12,11 @@ import org.telegram.mtproto.state.AbsMTProtoState;
 import org.telegram.mtproto.state.ConnectionInfo;
 import org.telegram.mtproto.state.KnownSalt;
 
+import java.io.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,41 +27,61 @@ import java.util.HashSet;
 public class DbApiStorage extends TLDbPersistence<TLStorage> implements AbsApiState {
 
     private static final String TAG = "DbApiStorage";
-    private String phoneNumber;
 
-    public DbApiStorage(String phoneNumber) throws Exception {
-        super(TLStorage.class);
-        this.phoneNumber = phoneNumber;
+    public DbApiStorage(String phoneNumber) {
+        super(phoneNumber, TLStorage.class);
         if (getObj().getDcInfos().size() == 0) {
             getObj().getDcInfos().add(new TLDcInfo(1, DcInitialConfig.ADDRESS, DcInitialConfig.PORT, 0));
         }
     }
 
     @Override
-    protected TLStorage loadData() throws Exception {
+    protected TLStorage loadData() {
         try (
                 Connection connection = ConnectionPool.getInstance().getConnection();
-                PreparedStatement statement = connection.prepareStatement("SELECT api_state FROM tl_phone_numbers WHERE phone_number = ?");
+                PreparedStatement statement = connection.prepareStatement("SELECT api_storage FROM tl_phone_numbers WHERE phone_number = ?")
         ) {
             statement.setString(1, phoneNumber);
             try(ResultSet rs = statement.executeQuery()) {
-                if (rs.next())
-                    return (TLStorage) rs.getObject(1);
-                else
-                    throw new Exception("Couldn't find a storage for number " + phoneNumber);
+                if (rs.next()) {
+                    try(InputStream is = rs.getBinaryStream(1)) {
+                        if(is != null)
+                            try(ObjectInputStream ois = new ObjectInputStream(is)) {
+                                return (TLStorage) ois.readObject();
+                            }
+                        else
+                            return null;
+                    } catch (IOException | ClassNotFoundException e) {
+                        Logger.w(TAG, "Failed to read the persisted storage from DB.");
+                        return null;
+                    }
+                } else {
+                    Logger.w(TAG, "Failed to find any persisted storage.");
+                    return null;
+                }
             }
+        } catch (SQLException e) {
+            Logger.e(TAG, e);
+            return null;
         }
     }
 
     @Override
-    protected void updateData() throws Exception {
+    protected void updateData() {
         try (
                 Connection connection = ConnectionPool.getInstance().getConnection();
-                PreparedStatement statement = connection.prepareStatement("UPDATE tl_phone_numbers SET api_storage = ? WHERE phone_number = ?")
+                PreparedStatement statement = connection.prepareStatement("UPDATE tl_phone_numbers SET api_storage = ? WHERE phone_number = ?");
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                ObjectOutputStream oos = new ObjectOutputStream(baos)
         ) {
-            statement.setObject(1, getObj());
-            statement.setString(2, phoneNumber);
-            statement.executeUpdate();
+            oos.writeObject(getObj());
+            try(ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray())) {
+                statement.setBinaryStream(1, bais);
+                statement.setString(2, phoneNumber);
+                statement.executeUpdate();
+            }
+        } catch (SQLException | IOException e) {
+            Logger.e(TAG, e);
         }
     }
 
@@ -74,15 +96,6 @@ public class DbApiStorage extends TLDbPersistence<TLStorage> implements AbsApiSt
             res[i] = dcsArray[i];
         }
         return res;
-    }
-
-
-    public void handleUpdateData() {
-        try {
-            updateData();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     private TLKey findKey(int dc) {
@@ -104,7 +117,7 @@ public class DbApiStorage extends TLDbPersistence<TLStorage> implements AbsApiSt
         key.setAuthorised(true);
         getObj().setUid(authorization.getUser().getId());
         getObj().setPhone(((TLUser) authorization.getUser()).getPhone());
-        handleUpdateData();
+        updateData();
     }
 
     public synchronized void doAuth(int uid, String phone) {
@@ -113,7 +126,7 @@ public class DbApiStorage extends TLDbPersistence<TLStorage> implements AbsApiSt
         key.setAuthorised(true);
         getObj().setUid(uid);
         getObj().setPhone(phone);
-        handleUpdateData();
+        updateData();
     }
 
     @Override
@@ -125,7 +138,7 @@ public class DbApiStorage extends TLDbPersistence<TLStorage> implements AbsApiSt
     public synchronized void setPrimaryDc(int dc) {
         Logger.d(TAG, "setPrimaryDc dc #" + dc);
         getObj().setPrimaryDc(dc);
-        handleUpdateData();
+        updateData();
     }
 
     @Override
@@ -139,7 +152,7 @@ public class DbApiStorage extends TLDbPersistence<TLStorage> implements AbsApiSt
         Logger.d(TAG, "setAuthenticated dc #" + dcId + ": " + auth);
         TLKey key = findKey(dcId);
         key.setAuthorised(auth);
-        handleUpdateData();
+        updateData();
     }
 
     @Override
@@ -178,7 +191,7 @@ public class DbApiStorage extends TLDbPersistence<TLStorage> implements AbsApiSt
             }
             getObj().getDcInfos().add(new TLDcInfo(option.getId(), option.getIpAddress(), option.getPort(), nextVersion));
         }
-        handleUpdateData();
+        updateData();
     }
 
     public synchronized void updateDCInfo(int dcId, String ip, int port) {
@@ -194,7 +207,7 @@ public class DbApiStorage extends TLDbPersistence<TLStorage> implements AbsApiSt
         }
 
         getObj().getDcInfos().add(new TLDcInfo(dcId, ip, port, version));
-        handleUpdateData();
+        updateData();
     }
 
     @Override
@@ -211,7 +224,7 @@ public class DbApiStorage extends TLDbPersistence<TLStorage> implements AbsApiSt
             return;
         }
         getObj().getKeys().add(new TLKey(dcId, authKey));
-        handleUpdateData();
+        updateData();
     }
 
     @Override
@@ -320,7 +333,7 @@ public class DbApiStorage extends TLDbPersistence<TLStorage> implements AbsApiSt
         for (int i = 0; i < salts.length; i++) {
             key.getSalts().add(new TLLastKnownSalt(salts[i].getValidSince(), salts[i].getValidUntil(), salts[i].getSalt()));
         }
-        handleUpdateData();
+        updateData();
     }
 
     private synchronized KnownSalt[] readKnownSalts(int dcId) {
@@ -373,7 +386,7 @@ public class DbApiStorage extends TLDbPersistence<TLStorage> implements AbsApiSt
         }
         getObj().setAuthorized(false);
         getObj().setUid(0);
-        handleUpdateData();
+        updateData();
     }
 
     @Override
@@ -382,7 +395,7 @@ public class DbApiStorage extends TLDbPersistence<TLStorage> implements AbsApiSt
         getObj().getKeys().clear();
         getObj().setAuthorized(false);
         getObj().setUid(0);
-        handleUpdateData();
+        updateData();
     }
 
     @Override

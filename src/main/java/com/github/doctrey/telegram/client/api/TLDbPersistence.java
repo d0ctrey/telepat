@@ -10,16 +10,25 @@ public abstract class TLDbPersistence<T extends TLObject> {
     private static final String TAG = "KernelPersistence";
 
     private Class<T> destClass;
+    protected String phoneNumber;
     private T obj;
 
-    public TLDbPersistence(Class<T> destClass) throws Exception {
+    public TLDbPersistence(String phoneNumber, Class<T> destClass) {
+        this.phoneNumber = phoneNumber;
         this.destClass = destClass;
         this.obj = loadData();
+        if (obj == null) {
+            try {
+                obj = destClass.newInstance();
+            } catch (Exception e1) {
+                throw new RuntimeException("Unable to instantiate default settings");
+            }
+        }
     }
 
-    protected abstract T loadData() throws Exception;
+    protected abstract T loadData();
 
-    protected abstract void updateData() throws Exception;
+    protected abstract void updateData();
 
     protected void afterLoaded() {
 
