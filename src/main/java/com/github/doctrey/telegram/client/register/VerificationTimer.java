@@ -1,7 +1,9 @@
 package com.github.doctrey.telegram.client.register;
 
+import com.github.doctrey.telegram.client.DbApiStorage;
 import com.github.doctrey.telegram.client.util.ConnectionPool;
 import org.telegram.api.engine.Logger;
+import org.telegram.api.engine.TelegramApi;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -22,11 +24,13 @@ public class VerificationTimer {
 
     private ScheduledExecutorService verificationTimerThreads;
     private ExecutorService verificationThreads;
+    private Map<String, TelegramApi> phoneNumberToApiMap;
     private boolean allThreadsDone;
 
     public VerificationTimer() {
         verificationTimerThreads = Executors.newSingleThreadScheduledExecutor();
         verificationThreads = Executors.newFixedThreadPool(10);
+        phoneNumberToApiMap = new HashMap<>();
     }
 
     public void startVerifying() {
@@ -44,12 +48,16 @@ public class VerificationTimer {
                 Logger.e(TAG, e);
             }
 
+            if(phoneNumberToCodeMap.isEmpty()) {
+                allThreadsDone = true;
+                return;
+            }
+
             // start verifying numbers
             List<Future> futureList = new ArrayList<>();
             for(String number : phoneNumberToCodeMap.keySet()) {
                 VerificationRunnable runnable = new VerificationRunnable();
-                runnable.setPhoneNumber(number);
-                runnable.setSecurityCode(phoneNumberToCodeMap.get(number));
+                runnable.setApi(phoneNumberToApiMap.get(number));
                 Future future = verificationThreads.submit(runnable);
                 futureList.add(future);
             }
@@ -79,5 +87,9 @@ public class VerificationTimer {
 
     public boolean isAllThreadsDone() {
         return allThreadsDone;
+    }
+
+    public void setNewClients(Map<String, TelegramApi> newClients) {
+        this.phoneNumberToApiMap = newClients;
     }
 }

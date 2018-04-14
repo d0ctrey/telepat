@@ -1,32 +1,31 @@
-package com.github.doctrey.telegram.client;
+package com.github.doctrey.telegram.client.util;
 
+import com.github.doctrey.telegram.client.DbApiStorage;
+import com.github.doctrey.telegram.client.DefaultApiCallback;
 import com.github.doctrey.telegram.client.api.ApiConstants;
 import com.github.doctrey.telegram.client.update.AbsUpdatesHandler;
 import com.github.doctrey.telegram.client.update.impl.UpdateShortHandler;
 import com.github.doctrey.telegram.client.update.impl.UpdatesHandler;
 import com.github.doctrey.telegram.client.update.impl.UpdatesTooLongHandler;
+import org.telegram.api.TLConfig;
+import org.telegram.api.TLNearestDc;
 import org.telegram.api.engine.AppInfo;
 import org.telegram.api.engine.Logger;
 import org.telegram.api.engine.TelegramApi;
-import org.telegram.api.functions.updates.TLRequestUpdatesGetState;
-import org.telegram.api.updates.TLUpdatesState;
+import org.telegram.api.functions.help.TLRequestHelpGetConfig;
+import org.telegram.api.functions.help.TLRequestHelpGetNearestDc;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeoutException;
 
 /**
- * Created by Soheil on 2/16/18.
+ * Created by Soheil on 4/14/18.
  */
-public class RunnableApi implements Runnable {
+public class ApiUtils {
 
-    private static final String TAG = "RunnableApi";
+    private static final String TAG = "ApiUtils";
 
-    private String phoneNumber;
-
-    @Override
-    public void run() {
+    public static TelegramApi createNewClient(String phoneNumber) {
         DbApiStorage apiStateStorage = new DbApiStorage(phoneNumber);
         DefaultApiCallback apiCallback = new DefaultApiCallback();
         TelegramApi api = new TelegramApi(apiStateStorage, new AppInfo(ApiConstants.API_ID,
@@ -40,21 +39,24 @@ public class RunnableApi implements Runnable {
         // setting handlers
         apiCallback.setUpdatesHandlers(updatesHandlers);
 
-        ApiUpdateState apiUpdateState = new ApiUpdateState(phoneNumber.replaceAll("\\+", ""));
-//        if (apiUpdateState.getObj().getDate() == 0) {
-            try {
-                TLUpdatesState tlState = api.doRpcCall(new TLRequestUpdatesGetState());
-                apiUpdateState.updateState(tlState);
-            } catch (IOException | TimeoutException e) {
-                Logger.e(TAG, e);
-            }
-//        }
+        RpcUtils rpcUtils = new RpcUtils(api);
+        TLConfig config = null;
+        try {
+            config = rpcUtils.doRpc(new TLRequestHelpGetConfig(), false);
+        } catch (Exception e) {
+            Logger.w(TAG, "Failed to get the config.");
+        }
+        apiStateStorage.updateSettings(config);
+        api.resetConnectionInfo();
 
-        /*executorService = Executors.newSingleThreadScheduledExecutor();
-        executorService.scheduleAtFixedRate(() -> processUpdates(new TLUpdatesTooLong()), 5, 30, TimeUnit.SECONDS);*/
-    }
+        TLNearestDc tlNearestDc = null;
+        try {
+            tlNearestDc = rpcUtils.doRpc(new TLRequestHelpGetNearestDc(), false);
+        } catch (Exception e) {
+            Logger.w(TAG, "Failed to get the nearest DC.");
+        }
+        rpcUtils.switchToDc(tlNearestDc.getNearestDc());
 
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
+        return api;
     }
 }

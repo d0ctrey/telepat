@@ -1,14 +1,18 @@
 package com.github.doctrey.telegram.client.register;
 
+import com.github.doctrey.telegram.client.DbApiStorage;
 import com.github.doctrey.telegram.client.util.ConnectionPool;
 import org.telegram.api.engine.Logger;
+import org.telegram.api.engine.TelegramApi;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 
 /**
@@ -20,11 +24,14 @@ public class RegistrationTimer {
 
     private ScheduledExecutorService registrationTimerThreads;
     private ExecutorService registrationThreads;
+    private Map<String, TelegramApi> newClients;
+    private boolean clientsUpdated;
 
 
     public RegistrationTimer() {
         registrationTimerThreads = Executors.newSingleThreadScheduledExecutor();
         registrationThreads = Executors.newFixedThreadPool(10);
+        newClients = new HashMap<>();
     }
 
     public void startCheckingForNewPhoneNumbers() {
@@ -42,20 +49,29 @@ public class RegistrationTimer {
                 Logger.e(TAG, e);
             }
 
+            if(phoneNumbers.isEmpty())
+                return;
+
             // start registering numbers
-            List<Future> futureList = new ArrayList<>();
+            List<Future<TelegramApi>> futureList = new ArrayList<>();
             for(String number : phoneNumbers) {
-                RegistrationRunnable runnable = new RegistrationRunnable();
-                runnable.setPhoneNumber(number);
-                Future future = registrationThreads.submit(runnable);
+                RegistrationCallable runnable = new RegistrationCallable();
+                if(newClients.containsKey(number))
+                    runnable.setApi(newClients.get(number));
+                else
+                    runnable.setPhoneNumber(number);
+                Future<TelegramApi> future = registrationThreads.submit(runnable);
                 futureList.add(future);
             }
 
+            // TODO: 4/12/18 replace with shutdown maybe?
             while (!allThreadsDone(futureList)) {
                 // just continue the loop
             }
 
+            // start verifying after all codes are sent
             VerificationTimer verificationTimer = new VerificationTimer();
+            verificationTimer.setNewClients(newClients);
             verificationTimer.startVerifying();
 
             while (!verificationTimer.isAllThreadsDone()) {
@@ -63,16 +79,35 @@ public class RegistrationTimer {
             }
 
             verificationTimer.stopVerifying();
+            clientsUpdated = true;
 
         }, 5000, 1 * 60 * 1000, TimeUnit.MILLISECONDS);
     }
 
-    private boolean allThreadsDone(List<Future> futureList) {
-        boolean allDone = true;
-        for(Future<?> future : futureList){
-            allDone &= future.isDone();
+    private boolean allThreadsDone(List<Future<TelegramApi>> futureList) {
+        for(Future<TelegramApi> future : futureList){
+            if(future.isDone())
+                try {
+                    TelegramApi api = future.get();
+                    newClients.put(((DbApiStorage) api.getState()).getPhoneNumber(), api);
+                } catch (InterruptedException | ExecutionException e) {
+                    Logger.e(TAG, e);
+                }
+            else
+                return false;
         }
 
-        return allDone;
+        return true;
+    }
+
+    public boolean isClientsUpdated() {
+        return clientsUpdated;
+    }
+
+    public List<TelegramApi> getNewClients() {
+        clientsUpdated = false;
+        List<TelegramApi> apiList = new ArrayList<>(newClients.values());
+        newClients.clear();
+        return apiList;
     }
 }

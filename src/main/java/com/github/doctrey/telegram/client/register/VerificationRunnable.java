@@ -16,32 +16,19 @@ import org.telegram.api.functions.help.TLRequestHelpGetNearestDc;
  */
 public class VerificationRunnable implements Runnable {
 
-    private String phoneNumber;
-    private String securityCode;
+    private TelegramApi api;
 
     @Override
     public void run() {
-        DbApiStorage apiStateStorage = new DbApiStorage(phoneNumber);
-        TelegramApi api = new TelegramApi(apiStateStorage, new AppInfo(ApiConstants.API_ID,
-                System.getenv("TL_DEVICE_MODEL"), System.getenv("TL_DEVICE_VERSION"), "0.0.1", "en"), new DefaultApiCallback());
-
-        RpcUtils rpcUtils = new RpcUtils(api);
-        TLConfig config = rpcUtils.doRpc(new TLRequestHelpGetConfig(), false);
-        apiStateStorage.updateSettings(config);
-        api.resetConnectionInfo();
-
-        TLNearestDc tlNearestDc = rpcUtils.doRpc(new TLRequestHelpGetNearestDc(), false);
-        rpcUtils.switchToDc(tlNearestDc.getNearestDc());
-
         RegistrationService registrationService = new RegistrationService(api);
-        registrationService.verifyCode(phoneNumber, securityCode);
+        try {
+            registrationService.verifyCode();
+        } catch (RegistrationException ignored) {
+
+        }
     }
 
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
-
-    public void setSecurityCode(String securityCode) {
-        this.securityCode = securityCode;
+    public void setApi(TelegramApi api) {
+        this.api = api;
     }
 }

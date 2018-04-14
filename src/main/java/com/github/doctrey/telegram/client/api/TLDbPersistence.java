@@ -37,4 +37,8 @@ public abstract class TLDbPersistence<T extends TLObject> {
     public T getObj() {
         return obj;
     }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
 }

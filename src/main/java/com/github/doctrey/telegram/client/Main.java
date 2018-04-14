@@ -1,28 +1,28 @@
-package com.github.doctrey.telegram.client.register;
+package com.github.doctrey.telegram.client;
 
-import com.github.doctrey.telegram.client.DbApiStorage;
-import com.github.doctrey.telegram.client.DefaultApiCallback;
 import com.github.doctrey.telegram.client.api.ApiConstants;
 import com.github.doctrey.telegram.client.util.RpcUtils;
 import org.telegram.api.TLConfig;
 import org.telegram.api.TLNearestDc;
+import org.telegram.api.auth.TLCheckedPhone;
 import org.telegram.api.engine.AppInfo;
 import org.telegram.api.engine.TelegramApi;
+import org.telegram.api.functions.auth.TLRequestAuthCheckPhone;
 import org.telegram.api.functions.help.TLRequestHelpGetConfig;
 import org.telegram.api.functions.help.TLRequestHelpGetNearestDc;
 
 /**
- * Created by s_tayari on 4/12/2018.
+ * Created by Soheil on 4/13/18.
  */
-public class RegistrationRunnable implements Runnable {
+public class Main {
 
-    private String phoneNumber;
+    private static final String PHONE_NUMBER = "8615504466140";
 
-    @Override
-    public void run() {
-        DbApiStorage apiStateStorage = new DbApiStorage(phoneNumber);
+    public static void main(String[] args) throws Exception {
+        ApiStorage apiStateStorage = new ApiStorage(PHONE_NUMBER);
+        DefaultApiCallback apiCallback = new DefaultApiCallback();
         TelegramApi api = new TelegramApi(apiStateStorage, new AppInfo(ApiConstants.API_ID,
-                System.getenv("TL_DEVICE_MODEL"), System.getenv("TL_DEVICE_VERSION"), "0.0.1", "en"), new DefaultApiCallback());
+                System.getenv("TL_DEVICE_MODEL"), System.getenv("TL_DEVICE_VERSION"), "0.0.1", "en"), apiCallback);
 
         RpcUtils rpcUtils = new RpcUtils(api);
         TLConfig config = rpcUtils.doRpc(new TLRequestHelpGetConfig(), false);
@@ -32,13 +32,8 @@ public class RegistrationRunnable implements Runnable {
         TLNearestDc tlNearestDc = rpcUtils.doRpc(new TLRequestHelpGetNearestDc(), false);
         rpcUtils.switchToDc(tlNearestDc.getNearestDc());
 
-        RegistrationService registrationService = new RegistrationService(api);
-        if (!apiStateStorage.isAuthenticated()) {
-            registrationService.sendCode(phoneNumber);
-        }
-    }
-
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
+        TLRequestAuthCheckPhone requestAuthCheckPhone = new TLRequestAuthCheckPhone();
+        requestAuthCheckPhone.setPhoneNumber(PHONE_NUMBER);
+        TLCheckedPhone checkedPhone = rpcUtils.doRpc(requestAuthCheckPhone, false);
     }
 }
