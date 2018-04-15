@@ -9,7 +9,11 @@ import org.telegram.api.engine.AppInfo;
 import org.telegram.api.engine.Logger;
 import org.telegram.api.engine.TelegramApi;
 import org.telegram.api.functions.updates.TLRequestUpdatesGetState;
+import org.telegram.api.functions.users.TLRequestUsersGetFullUser;
+import org.telegram.api.input.user.TLInputUserSelf;
 import org.telegram.api.updates.TLUpdatesState;
+import org.telegram.api.user.TLUser;
+import org.telegram.api.user.TLUserFull;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -40,7 +44,7 @@ public class RunnableApi implements Runnable {
         // setting handlers
         apiCallback.setUpdatesHandlers(updatesHandlers);
 
-        ApiUpdateState apiUpdateState = new ApiUpdateState(phoneNumber.replaceAll("\\+", ""));
+        DbApiUpdateState apiUpdateState = new DbApiUpdateState(phoneNumber.replaceAll("\\+", ""));
 //        if (apiUpdateState.getObj().getDate() == 0) {
             try {
                 TLUpdatesState tlState = api.doRpcCall(new TLRequestUpdatesGetState());
@@ -49,6 +53,17 @@ public class RunnableApi implements Runnable {
                 Logger.e(TAG, e);
             }
 //        }
+
+        TLRequestUsersGetFullUser getFullUser = new TLRequestUsersGetFullUser();
+        getFullUser.setId(new TLInputUserSelf());
+        api.doRpcCall(getFullUser, new AbstractRcpCallback<TLUserFull>() {
+            @Override
+            public void onResult(TLUserFull result) {
+                System.out.println("===================================================");
+                System.out.println("Api for " + ((TLUser) result.getUser()).getFirstName() + " " + ((TLUser) result.getUser()).getLastName() + " started.");
+                System.out.println("===================================================");
+            }
+        });
 
         /*executorService = Executors.newSingleThreadScheduledExecutor();
         executorService.scheduleAtFixedRate(() -> processUpdates(new TLUpdatesTooLong()), 5, 30, TimeUnit.SECONDS);*/

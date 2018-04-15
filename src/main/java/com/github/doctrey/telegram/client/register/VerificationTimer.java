@@ -24,13 +24,15 @@ public class VerificationTimer {
 
     private ScheduledExecutorService verificationTimerThreads;
     private ExecutorService verificationThreads;
-    private Map<String, TelegramApi> phoneNumberToApiMap;
+    private Map<String, TelegramApi> registeredApis;
+    private Map<String, TelegramApi> newlyRegisteredApis;
     private boolean allThreadsDone;
 
-    public VerificationTimer() {
+    public VerificationTimer(RegistrationTimer registrationTimer) {
+        this.registeredApis = registrationTimer.getRegisteredApis();
+        this.newlyRegisteredApis = registrationTimer.getNewlyRegisteredApis();
         verificationTimerThreads = Executors.newSingleThreadScheduledExecutor();
         verificationThreads = Executors.newFixedThreadPool(10);
-        phoneNumberToApiMap = new HashMap<>();
     }
 
     public void startVerifying() {
@@ -57,7 +59,11 @@ public class VerificationTimer {
             List<Future> futureList = new ArrayList<>();
             for(String number : phoneNumberToCodeMap.keySet()) {
                 VerificationRunnable runnable = new VerificationRunnable();
-                runnable.setApi(phoneNumberToApiMap.get(number));
+                if(registeredApis.containsKey(number)) {
+                    runnable.setApi(registeredApis.get(number));
+                } else {
+                    runnable.setPhoneNumber(number);
+                }
                 Future future = verificationThreads.submit(runnable);
                 futureList.add(future);
             }
@@ -68,7 +74,7 @@ public class VerificationTimer {
 
             this.allThreadsDone = true;
 
-        }, 5000, 1 * 60 * 1000, TimeUnit.MILLISECONDS);
+        }, 50000, 1 * 30 * 1000, TimeUnit.MILLISECONDS);
     }
 
 
@@ -76,20 +82,25 @@ public class VerificationTimer {
         verificationTimerThreads.shutdown();
     }
 
+    @SuppressWarnings("Duplicates")
     private boolean allThreadsDone(List<Future> futureList) {
-        boolean allDone = true;
-        for(Future<?> future : futureList){
-            allDone &= future.isDone();
+        for(Future<TelegramApi> future : futureList){
+            if(future.isDone())
+                try {
+                    TelegramApi api = future.get();
+                    registeredApis.put(((DbApiStorage) api.getState()).getPhoneNumber(), api);
+                    newlyRegisteredApis.put(((DbApiStorage) api.getState()).getPhoneNumber(), api);
+                } catch (InterruptedException | ExecutionException e) {
+                    Logger.e(TAG, e);
+                }
+            else
+                return false;
         }
 
-        return allDone;
+        return true;
     }
 
     public boolean isAllThreadsDone() {
         return allThreadsDone;
-    }
-
-    public void setNewClients(Map<String, TelegramApi> newClients) {
-        this.phoneNumberToApiMap = newClients;
     }
 }

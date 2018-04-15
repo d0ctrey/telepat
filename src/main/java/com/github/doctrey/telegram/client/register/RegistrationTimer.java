@@ -24,14 +24,16 @@ public class RegistrationTimer {
 
     private ScheduledExecutorService registrationTimerThreads;
     private ExecutorService registrationThreads;
-    private Map<String, TelegramApi> newClients;
+    private Map<String, TelegramApi> registeredApis;
+    private Map<String, TelegramApi> newlyRegisteredApis;
     private boolean clientsUpdated;
 
 
     public RegistrationTimer() {
         registrationTimerThreads = Executors.newSingleThreadScheduledExecutor();
         registrationThreads = Executors.newFixedThreadPool(10);
-        newClients = new HashMap<>();
+        registeredApis = new HashMap<>();
+        newlyRegisteredApis = new HashMap<>();
     }
 
     public void startCheckingForNewPhoneNumbers() {
@@ -56,8 +58,8 @@ public class RegistrationTimer {
             List<Future<TelegramApi>> futureList = new ArrayList<>();
             for(String number : phoneNumbers) {
                 RegistrationCallable runnable = new RegistrationCallable();
-                if(newClients.containsKey(number))
-                    runnable.setApi(newClients.get(number));
+                if(registeredApis.containsKey(number))
+                    runnable.setApi(registeredApis.get(number));
                 else
                     runnable.setPhoneNumber(number);
                 Future<TelegramApi> future = registrationThreads.submit(runnable);
@@ -69,27 +71,30 @@ public class RegistrationTimer {
                 // just continue the loop
             }
 
-            // start verifying after all codes are sent
+            // TODO s_tayari: @s_tayari 4/15/2018 Verifying should be done independently
+            /*// start verifying after all codes are sent
             VerificationTimer verificationTimer = new VerificationTimer();
-            verificationTimer.setNewClients(newClients);
+            verificationTimer.setRegisteredApis(registeredApis);
             verificationTimer.startVerifying();
 
             while (!verificationTimer.isAllThreadsDone()) {
                 // just continue the loop
             }
 
-            verificationTimer.stopVerifying();
+            verificationTimer.stopVerifying();*/
             clientsUpdated = true;
 
-        }, 5000, 1 * 60 * 1000, TimeUnit.MILLISECONDS);
+        }, 3000, 1 * 30 * 1000, TimeUnit.MILLISECONDS);
     }
 
+    @SuppressWarnings("Duplicates")
     private boolean allThreadsDone(List<Future<TelegramApi>> futureList) {
         for(Future<TelegramApi> future : futureList){
             if(future.isDone())
                 try {
                     TelegramApi api = future.get();
-                    newClients.put(((DbApiStorage) api.getState()).getPhoneNumber(), api);
+                    registeredApis.put(((DbApiStorage) api.getState()).getPhoneNumber(), api);
+                    newlyRegisteredApis.put(((DbApiStorage) api.getState()).getPhoneNumber(), api);
                 } catch (InterruptedException | ExecutionException e) {
                     Logger.e(TAG, e);
                 }
@@ -104,10 +109,14 @@ public class RegistrationTimer {
         return clientsUpdated;
     }
 
-    public List<TelegramApi> getNewClients() {
+    public Map<String, TelegramApi> getRegisteredApis() {
+        return registeredApis;
+    }
+
+    public Map<String, TelegramApi> getNewlyRegisteredApis() {
         clientsUpdated = false;
-        List<TelegramApi> apiList = new ArrayList<>(newClients.values());
-        newClients.clear();
-        return apiList;
+        Map<String, TelegramApi> clonedNewlyRegisteredApis = new HashMap<>(newlyRegisteredApis);
+        newlyRegisteredApis.clear();
+        return clonedNewlyRegisteredApis;
     }
 }

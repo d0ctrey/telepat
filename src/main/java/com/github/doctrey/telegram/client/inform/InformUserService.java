@@ -1,6 +1,5 @@
 package com.github.doctrey.telegram.client.inform;
 
-import org.telegram.api.input.chat.TLInputChannel;
 import org.telegram.tl.TLObject;
 
 /**

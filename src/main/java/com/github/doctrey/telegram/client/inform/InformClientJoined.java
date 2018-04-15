@@ -2,12 +2,9 @@ package com.github.doctrey.telegram.client.inform;
 
 import com.github.doctrey.telegram.client.AbstractRcpCallback;
 import com.github.doctrey.telegram.client.util.MessageUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.telegram.api.engine.TelegramApi;
 import org.telegram.api.functions.messages.TLRequestMessagesSendMessage;
 import org.telegram.api.input.peer.TLAbsInputPeer;
-import org.telegram.api.input.peer.TLInputPeerChannel;
 import org.telegram.api.input.peer.TLInputPeerChat;
 import org.telegram.api.input.peer.TLInputPeerSelf;
 import org.telegram.api.updates.TLAbsUpdates;
@@ -16,24 +13,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by Soheil on 12/28/17.
+ * Created by s_tayari on 4/15/2018.
  */
-public class InformChannelRead implements InformUserService<TLInputPeerChannel> {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(InformChannelRead.class);
+public class InformClientJoined implements InformUserService<TLInputPeerSelf> {
 
     private TelegramApi api;
 
-    public InformChannelRead(TelegramApi api) {
-        this.api = api;
-    }
-
     @Override
-    public void inform(TLInputPeerChannel object) {
+    public void inform(TLInputPeerSelf object) {
         findPeers().forEach(absInputPeer -> {
             TLRequestMessagesSendMessage sendMessage = new TLRequestMessagesSendMessage();
             sendMessage.setRandomId(MessageUtils.generateRandomId());
-            sendMessage.setMessage("Read history of channel " + object.getChannelId() + ".");
+            sendMessage.setMessage("Hey, I've joined the team.");
             sendMessage.setPeer(absInputPeer);
 
             api.doRpcCall(sendMessage, new AbstractRcpCallback<TLAbsUpdates>() {
@@ -53,5 +44,9 @@ public class InformChannelRead implements InformUserService<TLInputPeerChannel> 
 
         return inputPeers;
 
+    }
+
+    public void setApi(TelegramApi api) {
+        this.api = api;
     }
 }

@@ -189,7 +189,7 @@ public class DbApiStorage extends TLDbPersistence<TLStorage> implements AbsApiSt
                     getObj().getDcInfos().remove(info);
                 }
             }
-            if(!option.isIPV6())
+            if(!option.isIPV6() || (option.isIPV6() && Boolean.valueOf(System.getenv("TL_ALLOW_IPV6"))))
                 getObj().getDcInfos().add(new TLDcInfo(option.getId(), option.getIpAddress(), option.getPort(), nextVersion));
         }
         updateData();

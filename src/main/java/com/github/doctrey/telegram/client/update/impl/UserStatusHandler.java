@@ -2,10 +2,8 @@ package com.github.doctrey.telegram.client.update.impl;
 
 import com.github.doctrey.telegram.client.AbstractRcpCallback;
 import com.github.doctrey.telegram.client.update.AbsUpdateHandler;
-import com.github.doctrey.telegram.client.update.AbsUpdatesHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.telegram.api.contact.TLContact;
 import org.telegram.api.engine.TelegramApi;
 import org.telegram.api.functions.users.TLRequestUsersGetFullUser;
 import org.telegram.api.input.user.TLInputUser;
@@ -63,7 +61,9 @@ public class UserStatusHandler implements AbsUpdateHandler<TLUpdateShort, TLUpda
             @Override
             public void onResult(TLUserFull result) {
                 if (result.getUser() instanceof TLUser)
-                    System.out.println("##### " + ((TLUser) result.getUser()).getFirstName() + " " + ((TLUser) result.getUser()).getLastName() + " is " + finalStatusString + " #####");
+                    System.out.println("=============================================");
+                    System.out.println(((TLUser) result.getUser()).getFirstName() + " " + ((TLUser) result.getUser()).getLastName() + " is [" + finalStatusString + "]");
+                    System.out.println("=============================================");
             }
         });
     }

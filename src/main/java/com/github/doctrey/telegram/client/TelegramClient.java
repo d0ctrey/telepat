@@ -1,7 +1,9 @@
 package com.github.doctrey.telegram.client;
 
+import com.github.doctrey.telegram.client.register.NewClientTimer;
 import com.github.doctrey.telegram.client.register.PhoneNumberStatus;
 import com.github.doctrey.telegram.client.register.RegistrationTimer;
+import com.github.doctrey.telegram.client.register.VerificationTimer;
 import com.github.doctrey.telegram.client.util.ConnectionPool;
 import org.telegram.api.engine.Logger;
 
@@ -25,6 +27,12 @@ public class TelegramClient {
     public static void main(String[] args) {
         RegistrationTimer registrationTimer = new RegistrationTimer();
         registrationTimer.startCheckingForNewPhoneNumbers();
+
+        VerificationTimer verificationTimer = new VerificationTimer(registrationTimer);
+        verificationTimer.startVerifying();
+
+        NewClientTimer newClientTimer = new NewClientTimer(registrationTimer);
+        newClientTimer.checkForNewClients();
 
         // find active clients
         List<String> phoneNumbers = new ArrayList<>();
