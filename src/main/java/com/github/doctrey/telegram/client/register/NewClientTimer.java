@@ -1,6 +1,6 @@
 package com.github.doctrey.telegram.client.register;
 
-import com.github.doctrey.telegram.client.inform.InformClientJoined;
+import com.github.doctrey.telegram.client.listener.MemberJoinedListener;
 import org.telegram.api.engine.TelegramApi;
 import org.telegram.api.input.peer.TLInputPeerSelf;
 
@@ -16,12 +16,12 @@ public class NewClientTimer {
 
     private ScheduledExecutorService timerThread;
     private RegistrationTimer registrationTimer;
-    private InformClientJoined informClientJoined;
+    private MemberJoinedListener memberJoinedListenerService;
 
     public NewClientTimer(RegistrationTimer registrationTimer) {
         this.registrationTimer = registrationTimer;
         timerThread = Executors.newSingleThreadScheduledExecutor();
-        informClientJoined = new InformClientJoined();
+        memberJoinedListenerService = new MemberJoinedListener();
     }
 
     public void checkForNewClients() {
@@ -32,9 +32,8 @@ public class NewClientTimer {
             if(registrationTimer.isClientsUpdated()) {
                 Map<String, TelegramApi> registeredApis = registrationTimer.getNewlyRegisteredApis();
                 for(String number : registeredApis.keySet()) {
-
-                    informClientJoined.setApi(registeredApis.get(number));
-                    informClientJoined.inform(new TLInputPeerSelf());
+                    memberJoinedListenerService.setApi(registeredApis.get(number));
+                    memberJoinedListenerService.inform(new TLInputPeerSelf());
                 }
             }
 

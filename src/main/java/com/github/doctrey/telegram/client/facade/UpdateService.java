@@ -1,12 +1,10 @@
 package com.github.doctrey.telegram.client.facade;
 
-import com.github.doctrey.telegram.client.AbstractRcpCallback;
+import com.github.doctrey.telegram.client.AbstractRpcCallback;
 import com.github.doctrey.telegram.client.DbApiStorage;
 import com.github.doctrey.telegram.client.ApiUpdateState;
 import com.github.doctrey.telegram.client.difference.DifferenceProcessor;
 import com.github.doctrey.telegram.client.difference.NewMessageProcessor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.telegram.api.engine.TelegramApi;
 import org.telegram.api.functions.updates.TLRequestUpdatesGetDifference;
 import org.telegram.api.updates.TLUpdatesState;
@@ -19,8 +17,6 @@ import java.util.List;
  * Created by Soheil on 12/26/17.
  */
 public class UpdateService {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(UpdateService.class);
 
     private TelegramApi api;
     private DbApiStorage apiStateStorage;
@@ -40,7 +36,7 @@ public class UpdateService {
         getDifference.setDate(lastState.getDate());
         getDifference.setPts(lastState.getPts());
         getDifference.setQts(lastState.getQts());
-        api.doRpcCall(getDifference, new AbstractRcpCallback<TLAbsDifference>() {
+        api.doRpcCall(getDifference, new AbstractRpcCallback<TLAbsDifference>() {
 
             @Override
             public void onResult(TLAbsDifference result) {

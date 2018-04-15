@@ -5,7 +5,7 @@ package com.github.doctrey.telegram.client.register;
  */
 public enum PhoneNumberStatus {
 
-    NEW(1), CODE_SENT(2), CODE_RECEIVED(3), REGISTERED(4), INACTIVE(5);
+    NEW(1), CODE_SENT(2), CODE_RECEIVED(3), REGISTERED(4), INACTIVE(5), BLOCKED(6);
 
     private int code;
 

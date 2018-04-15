@@ -8,9 +8,9 @@ import org.telegram.tl.TLObject;
 /**
  * Created by Soheil on 12/26/17.
  */
-public abstract class AbstractRcpCallback<T extends TLObject> implements RpcCallbackEx<T> {
+public abstract class AbstractRpcCallback<T extends TLObject> implements RpcCallbackEx<T> {
 
-    protected static final Logger LOGGER = LoggerFactory.getLogger(AbstractRcpCallback.class);
+    protected static final Logger LOGGER = LoggerFactory.getLogger(AbstractRpcCallback.class);
 
     @Override
     public void onConfirmed() {
@@ -22,6 +22,6 @@ public abstract class AbstractRcpCallback<T extends TLObject> implements RpcCall
 
     @Override
     public void onError(int errorCode, String errorText) {
-        LOGGER.error("RCP call failed with error -----> {} {}", errorCode, errorText);
+        LOGGER.error("RPC call failed with error -----> {} {}", errorCode, errorText);
     }
 }

@@ -1,8 +1,8 @@
 package com.github.doctrey.telegram.client.facade;
 
-import com.github.doctrey.telegram.client.AbstractRcpCallback;
+import com.github.doctrey.telegram.client.AbstractRpcCallback;
 import com.github.doctrey.telegram.client.api.TLRequestMessagesGetMessagesViews;
-import com.github.doctrey.telegram.client.inform.InformChannelRead;
+import com.github.doctrey.telegram.client.listener.ChannelViewedListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.telegram.api.chat.channel.TLChannel;
@@ -30,11 +30,11 @@ public class MessageService {
     private TelegramApi api;
     private final Integer[] whiteList = {1343528547};
 
-    private InformChannelRead informChannelRead;
+    private ChannelViewedListener channelViewedListenerService;
 
     public MessageService(TelegramApi api) {
         this.api = api;
-        informChannelRead = new InformChannelRead(api);
+        channelViewedListenerService = new ChannelViewedListener(api);
     }
 
     public void markChannelHistoryAsRead(TLAbsMessage absMessage, TLChannel channel) {
@@ -53,7 +53,7 @@ public class MessageService {
                     readHistory.setChannel(inputChannel);
 
                     // reading the history
-                    api.doRpcCall(readHistory, new AbstractRcpCallback<TLBool>() {
+                    api.doRpcCall(readHistory, new AbstractRpcCallback<TLBool>() {
                         @Override
                         public void onResult(TLBool result) {
                             if (result instanceof TLBoolTrue) {
@@ -68,10 +68,10 @@ public class MessageService {
                                 messagesViews.setPeer(inputPeerChannel);
                                 messagesViews.setIncrement(true);
                                 messagesViews.setId(intVector);
-                                api.doRpcCall(messagesViews, new AbstractRcpCallback<TLIntVector>() {
+                                api.doRpcCall(messagesViews, new AbstractRpcCallback<TLIntVector>() {
                                     @Override
                                     public void onResult(TLIntVector result) {
-                                        informChannelRead.inform(inputPeerChannel);
+                                        channelViewedListenerService.inform(inputPeerChannel);
                                     }
                                 });
                             }

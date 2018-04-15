@@ -22,7 +22,6 @@ import java.util.Optional;
  */
 public class ChannelNewMessageHandler implements AbsUpdateHandler<TLUpdates, TLUpdateChannelNewMessage> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ChannelNewMessageHandler.class);
 
     private TelegramApi api;
     private MessageService messageService;

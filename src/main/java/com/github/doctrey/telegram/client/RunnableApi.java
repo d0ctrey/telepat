@@ -1,10 +1,12 @@
 package com.github.doctrey.telegram.client;
 
 import com.github.doctrey.telegram.client.api.ApiConstants;
+import com.github.doctrey.telegram.client.facade.SecurityService;
 import com.github.doctrey.telegram.client.update.AbsUpdatesHandler;
 import com.github.doctrey.telegram.client.update.impl.UpdateShortHandler;
 import com.github.doctrey.telegram.client.update.impl.UpdatesHandler;
 import com.github.doctrey.telegram.client.update.impl.UpdatesTooLongHandler;
+import com.github.doctrey.telegram.client.util.MessageUtils;
 import org.telegram.api.engine.AppInfo;
 import org.telegram.api.engine.Logger;
 import org.telegram.api.engine.TelegramApi;
@@ -56,14 +58,18 @@ public class RunnableApi implements Runnable {
 
         TLRequestUsersGetFullUser getFullUser = new TLRequestUsersGetFullUser();
         getFullUser.setId(new TLInputUserSelf());
-        api.doRpcCall(getFullUser, new AbstractRcpCallback<TLUserFull>() {
+        api.doRpcCall(getFullUser, new AbstractRpcCallback<TLUserFull>() {
             @Override
             public void onResult(TLUserFull result) {
                 System.out.println("===================================================");
-                System.out.println("Api for " + ((TLUser) result.getUser()).getFirstName() + " " + ((TLUser) result.getUser()).getLastName() + " started.");
+                System.out.println("API for " + ((TLUser) result.getUser()).getFirstName() + " " + ((TLUser) result.getUser()).getLastName() + " started.");
                 System.out.println("===================================================");
             }
         });
+
+        /*MemberJoinedListener joinedListenerService = new MemberJoinedListener();
+        joinedListenerService.setApi(api);
+        joinedListenerService.inform(new TLInputPeerSelf());*/
 
         /*executorService = Executors.newSingleThreadScheduledExecutor();
         executorService.scheduleAtFixedRate(() -> processUpdates(new TLUpdatesTooLong()), 5, 30, TimeUnit.SECONDS);*/

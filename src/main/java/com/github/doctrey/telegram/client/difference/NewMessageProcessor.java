@@ -11,8 +11,6 @@ import org.telegram.api.updates.difference.TLAbsDifference;
  */
 public class NewMessageProcessor implements DifferenceProcessor {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(NewMessageProcessor.class);
-
     private MessageService messageService;
     private TelegramApi api;
 
