@@ -7,5 +7,5 @@ import org.telegram.tl.TLObject;
  */
 public interface Listener<T extends TLObject> {
 
-    void inform(T object);
+    void inform(T tlObject);
 }

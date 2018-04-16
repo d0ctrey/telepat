@@ -7,8 +7,8 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public class NameUtils {
 
-    public static final String[] FIRST_NAMES = {"Ali", "Behnam", "Mohsen", "Azar", "Faranak", "Saman", "Ebrahim", "Vahid", "Rojin", "Rozita", "Maryam"};
-    public static final String[] LAST_NAMES = {"Alipour", "Abbasi", "Amiri", "Baani", "Barzi", "Bahmani", "Salami", "Taheri", "Hemmati", "Afshar", "Salehi", "Karimi"};
+    public static final String[] FIRST_NAMES = {"Ali", "Behnam", "Mohsen", "Azar", "Faranak", "Saman", "Ebrahim", "Vahid", "Rojin", "Rozita", "Maryam", "Neda", "Sahar", "Sara", "Nasim", "Nima", "Hamid", "Ehsan", "Kimia", "Kourosh", "Samar"};
+    public static final String[] LAST_NAMES = {"Alipour", "Abbasi", "Amiri", "Baani", "Barzi", "Bahmani", "Salami", "Taheri", "Hemmati", "Afshar", "Salehi", "Karimi", "Samimi", "Nabavi", "Tehrani", "Tabatabaei", "Nosrati", "Bayat", "Barez", "Servati", "Bahar", "Farahani"};
 
     public static String randomFirstName() {
         int firstNameIndex = ThreadLocalRandom.current().nextInt(FIRST_NAMES.length);

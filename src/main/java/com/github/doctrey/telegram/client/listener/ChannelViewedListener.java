@@ -28,7 +28,7 @@ public class ChannelViewedListener implements Listener<TLInputPeerChannel> {
     }
 
     @Override
-    public void inform(TLInputPeerChannel object) {
+    public void inform(TLInputPeerChannel tlObject) {
         int groupId = 0;
         try (Connection connection = ConnectionPool.getInstance().getConnection();
              PreparedStatement statement = connection.prepareStatement("SELECT group_id FROM tl_admin_groups WHERE group_type = ?")) {
@@ -49,7 +49,7 @@ public class ChannelViewedListener implements Listener<TLInputPeerChannel> {
         inputPeerChat.setChatId(groupId);
         TLRequestMessagesSendMessage sendMessage = new TLRequestMessagesSendMessage();
         sendMessage.setRandomId(MessageUtils.generateRandomId());
-        sendMessage.setMessage("Read history of channel " + object.getChannelId() + ".");
+        sendMessage.setMessage("Read history of channel " + tlObject.getChannelId() + ".");
         sendMessage.setPeer(inputPeerChat);
 
         api.doRpcCall(sendMessage, new AbstractRpcCallback<TLAbsUpdates>() {

@@ -32,7 +32,6 @@ public class NewClientTimer {
             if(registrationTimer.isClientsUpdated()) {
                 Map<String, TelegramApi> registeredApis = registrationTimer.getNewlyRegisteredApis();
                 for(String number : registeredApis.keySet()) {
-                    memberJoinedListenerService.setApi(registeredApis.get(number));
                     memberJoinedListenerService.inform(new TLInputPeerSelf());
                 }
             }

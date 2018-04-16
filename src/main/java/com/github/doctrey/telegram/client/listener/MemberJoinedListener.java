@@ -1,19 +1,8 @@
 package com.github.doctrey.telegram.client.listener;
 
-import com.github.doctrey.telegram.client.AbstractRpcCallback;
-import com.github.doctrey.telegram.client.util.ConnectionPool;
-import org.telegram.api.engine.Logger;
+import com.github.doctrey.telegram.client.facade.GroupService;
 import org.telegram.api.engine.TelegramApi;
-import org.telegram.api.functions.messages.TLRequestMessagesImportChatInvite;
 import org.telegram.api.input.peer.TLInputPeerSelf;
-import org.telegram.api.updates.TLAbsUpdates;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by s_tayari on 4/15/2018.
@@ -23,38 +12,24 @@ public class MemberJoinedListener implements Listener<TLInputPeerSelf> {
     private static final String TAG = "MemberJoinedListener";
 
     private TelegramApi api;
+    private GroupService groupService;
+
+    public MemberJoinedListener() {
+        this(null);
+    }
+
+    public MemberJoinedListener(TelegramApi api) {
+        this.api = api;
+        groupService = new GroupService(api);
+    }
 
     @Override
-    public void inform(TLInputPeerSelf object) {
-        List<String> inviteLinkList = new ArrayList<>();
-        try (Connection connection = ConnectionPool.getInstance().getConnection();
-             PreparedStatement statement = connection.prepareStatement("SELECT group_link FROM tl_admin_groups")) {
-            try (ResultSet rs = statement.executeQuery()) {
-                while (rs.next()) {
-                    inviteLinkList.add(rs.getString(1));
-                }
-            }
-        } catch (SQLException e) {
-            Logger.e(TAG, e);
-            return;
-        }
-
-
-        for(String inviteLink : inviteLinkList) {
-            String hash = inviteLink.split("/")[(inviteLink.split("/").length) - 1];
-            TLRequestMessagesImportChatInvite importChatInvite = new TLRequestMessagesImportChatInvite();
-            importChatInvite.setHash(hash);
-
-            api.doRpcCall(importChatInvite, new AbstractRpcCallback<TLAbsUpdates>() {
-                @Override
-                public void onResult(TLAbsUpdates result) {
-
-                }
-            });
-        }
+    public void inform(TLInputPeerSelf tlObject) {
+        groupService.joinAdminGroups();
     }
 
     public void setApi(TelegramApi api) {
         this.api = api;
+        groupService.setApi(api);
     }
 }
