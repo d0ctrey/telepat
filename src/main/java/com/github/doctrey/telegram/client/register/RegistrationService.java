@@ -2,6 +2,7 @@ package com.github.doctrey.telegram.client.register;
 
 import com.github.doctrey.telegram.client.DbApiStorage;
 import com.github.doctrey.telegram.client.api.ApiConstants;
+import com.github.doctrey.telegram.client.listener.ListenerQueue;
 import com.github.doctrey.telegram.client.util.ConnectionPool;
 import com.github.doctrey.telegram.client.util.NameUtils;
 import com.github.doctrey.telegram.client.util.RpcUtils;
@@ -9,11 +10,9 @@ import org.telegram.api.auth.TLAuthorization;
 import org.telegram.api.auth.TLSentCode;
 import org.telegram.api.engine.Logger;
 import org.telegram.api.engine.TelegramApi;
-import org.telegram.api.functions.auth.TLRequestAuthCheckPhone;
 import org.telegram.api.functions.auth.TLRequestAuthSendCode;
 import org.telegram.api.functions.auth.TLRequestAuthSignIn;
 import org.telegram.api.functions.auth.TLRequestAuthSignUp;
-import org.telegram.bot.kernel.engine.MemoryApiState;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -29,12 +28,23 @@ public class RegistrationService {
 
     private String phoneNumber;
     private TelegramApi api;
+    private ListenerQueue listenerQueue;
     private RpcUtils rpcUtils;
 
-    public RegistrationService(TelegramApi api) {
+    public RegistrationService(TelegramApi api, ListenerQueue listenerQueue) {
         this.api = api;
+        this.listenerQueue = listenerQueue;
         rpcUtils = new RpcUtils(api);
         phoneNumber = ((DbApiStorage) api.getState()).getPhoneNumber();
+
+    }
+
+    public RegistrationService(ListenerQueue listenerQueue) {
+        this(null, listenerQueue);
+    }
+
+    public RegistrationService() {
+        this(null);
     }
 
     public void sendCode() throws RegistrationException {
@@ -49,9 +59,9 @@ public class RegistrationService {
             throw new RegistrationException(e);
         }
 
-        try(Connection connection = ConnectionPool.getInstance().getConnection();
-            PreparedStatement statement = connection.prepareStatement("UPDATE tl_phone_numbers SET status = ?, phone_code_hash = ?, phone_registered = ? WHERE phone_number = ?")
-            ) {
+        try (Connection connection = ConnectionPool.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement("UPDATE tl_phone_numbers SET status = ?, phone_code_hash = ?, phone_registered = ? WHERE phone_number = ?")
+        ) {
 
             statement.setInt(1, PhoneNumberStatus.CODE_SENT.getCode());
             statement.setString(2, sentCode.getPhoneCodeHash());
@@ -85,12 +95,12 @@ public class RegistrationService {
         boolean phoneRegistered = false;
         String codeHash = null;
         String securityCode = null;
-        try(Connection connection = ConnectionPool.getInstance().getConnection();
-            PreparedStatement statement = connection.prepareStatement("SELECT * FROM tl_phone_numbers WHERE phone_number = ?")
+        try (Connection connection = ConnectionPool.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement("SELECT * FROM tl_phone_numbers WHERE phone_number = ?")
         ) {
             statement.setString(1, phoneNumber);
-            try(ResultSet rs = statement.executeQuery()) {
-                if(rs.next()) {
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
                     phoneRegistered = rs.getBoolean("phone_registered");
                     codeHash = rs.getString("phone_code_hash");
                     securityCode = rs.getString("security_code");
@@ -127,8 +137,8 @@ public class RegistrationService {
             }
         }
 
-        try(Connection connection = ConnectionPool.getInstance().getConnection();
-            PreparedStatement statement = connection.prepareStatement("UPDATE tl_phone_numbers SET status = ?, user_id = ? WHERE phone_number = ?")
+        try (Connection connection = ConnectionPool.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement("UPDATE tl_phone_numbers SET status = ?, user_id = ? WHERE phone_number = ?")
         ) {
             statement.setInt(1, PhoneNumberStatus.REGISTERED.getCode());
             statement.setInt(2, authorization.getUser().getId());
@@ -142,4 +152,7 @@ public class RegistrationService {
         api.getState().setAuthenticated(api.getState().getPrimaryDc(), true);
     }
 
+    public void setApi(TelegramApi api) {
+        this.api = api;
+    }
 }

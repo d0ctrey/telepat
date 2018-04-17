@@ -7,5 +7,6 @@ import com.github.doctrey.telegram.client.listener.event.Event;
  */
 public interface Listener<T extends Event> {
 
+    Class<T> getEventClass();
     void inform(T event);
 }

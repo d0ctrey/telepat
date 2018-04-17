@@ -29,7 +29,8 @@ public class RegistrationCallable implements Callable<TelegramApi> {
             api = ApiUtils.createNewClient(phoneNumber);
 
         AbsApiState apiStateStorage = api.getState();
-        RegistrationService registrationService = new RegistrationService(api);
+        RegistrationService registrationService = new RegistrationService();
+        registrationService.setApi(api);
         if (!apiStateStorage.isAuthenticated()) {
             try {
                 registrationService.sendCode();

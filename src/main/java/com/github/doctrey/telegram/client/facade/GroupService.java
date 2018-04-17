@@ -1,6 +1,7 @@
 package com.github.doctrey.telegram.client.facade;
 
 import com.github.doctrey.telegram.client.AbstractRpcCallback;
+import com.github.doctrey.telegram.client.listener.ListenerQueue;
 import com.github.doctrey.telegram.client.util.ConnectionPool;
 import org.telegram.api.engine.Logger;
 import org.telegram.api.engine.TelegramApi;
@@ -20,15 +21,20 @@ import java.util.List;
 public class GroupService {
 
     private static final String TAG = "GroupService";
-
     private TelegramApi api;
+    private ListenerQueue listenerQueue;
+
+    public GroupService(ListenerQueue listenerQueue, TelegramApi api) {
+        this.api = api;
+        this.listenerQueue = listenerQueue;
+    }
+
+    public GroupService(ListenerQueue listenerQueue) {
+        this(listenerQueue, null);
+    }
 
     public GroupService() {
         this(null);
-    }
-
-    public GroupService(TelegramApi api) {
-        this.api = api;
     }
 
     public void joinAdminGroups() {

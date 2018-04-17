@@ -20,7 +20,12 @@ public class ClientJoinedListener implements Listener<ClientJoinedEvent> {
 
     public ClientJoinedListener(TelegramApi api) {
         this.api = api;
-        groupService = new GroupService(api);
+        groupService = new GroupService();
+    }
+
+    @Override
+    public Class<ClientJoinedEvent> getEventClass() {
+        return ClientJoinedEvent.class;
     }
 
     @Override

@@ -21,6 +21,11 @@ public class VerificationCallable implements Callable<TelegramApi> {
 
     private TelegramApi api;
     private String phoneNumber;
+    RegistrationService registrationService;
+
+    public VerificationCallable() {
+        registrationService = new RegistrationService();
+    }
 
     @Override
     public TelegramApi call() {
@@ -35,7 +40,8 @@ public class VerificationCallable implements Callable<TelegramApi> {
             Logger.e(TAG, e);
         }
 
-        RegistrationService registrationService = new RegistrationService(api);
+
+        registrationService.setApi(api);
         try {
             registrationService.verifyCode();
         } catch (RegistrationException e) {

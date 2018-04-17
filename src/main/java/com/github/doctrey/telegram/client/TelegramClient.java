@@ -1,5 +1,8 @@
 package com.github.doctrey.telegram.client;
 
+import com.github.doctrey.telegram.client.listener.ClientJoinedListener;
+import com.github.doctrey.telegram.client.listener.Listener;
+import com.github.doctrey.telegram.client.listener.ListenerQueue;
 import com.github.doctrey.telegram.client.register.NewClientTimer;
 import com.github.doctrey.telegram.client.register.PhoneNumberStatus;
 import com.github.doctrey.telegram.client.register.RegistrationTimer;
@@ -25,13 +28,17 @@ public class TelegramClient {
     private static final int GROUP_ID = 1;
 
     public static void main(String[] args) {
+        List<Listener> listeners = new ArrayList<>();
+        listeners.add(new ClientJoinedListener());
+        ListenerQueue listenerQueue = new ListenerQueue(listeners);
+
         RegistrationTimer registrationTimer = new RegistrationTimer();
         registrationTimer.startCheckingForNewPhoneNumbers();
 
         VerificationTimer verificationTimer = new VerificationTimer(registrationTimer);
         verificationTimer.startVerifying();
 
-        NewClientTimer newClientTimer = new NewClientTimer(registrationTimer);
+        NewClientTimer newClientTimer = new NewClientTimer(registrationTimer, listenerQueue);
         newClientTimer.checkForNewClients();
 
         // find active clients
@@ -53,6 +60,7 @@ public class TelegramClient {
         for(String phone : phoneNumbers) {
             RunnableApi runnableApi = new RunnableApi();
             runnableApi.setPhoneNumber(phone);
+            runnableApi.setListenerQueue(listenerQueue);
             clientThreads.submit(runnableApi);
         }
 

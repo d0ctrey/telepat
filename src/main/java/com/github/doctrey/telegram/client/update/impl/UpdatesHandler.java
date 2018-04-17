@@ -2,8 +2,6 @@ package com.github.doctrey.telegram.client.update.impl;
 
 import com.github.doctrey.telegram.client.update.AbsUpdateHandler;
 import com.github.doctrey.telegram.client.update.AbsUpdatesHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.telegram.api.engine.TelegramApi;
 import org.telegram.api.update.TLAbsUpdate;
 import org.telegram.api.updates.TLUpdates;
@@ -16,14 +14,12 @@ import java.util.List;
  */
 public class UpdatesHandler implements AbsUpdatesHandler<TLUpdates> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(UpdatesHandler.class);
-
     private List<AbsUpdateHandler> updateHandlers = new ArrayList<>();
     private TelegramApi api;
 
-    public UpdatesHandler(TelegramApi api) {
+    public UpdatesHandler(TelegramApi api, List<? extends AbsUpdateHandler> absUpdateHandlers) {
         this.api = api;
-        updateHandlers.add(new ChannelNewMessageHandler(api));
+        updateHandlers.addAll(absUpdateHandlers);
     }
 
     @Override

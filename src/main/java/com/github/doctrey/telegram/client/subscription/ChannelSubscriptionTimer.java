@@ -1,10 +1,8 @@
 package com.github.doctrey.telegram.client.subscription;
 
-import com.github.doctrey.telegram.client.ApiStorage;
 import com.github.doctrey.telegram.client.DbApiStorage;
 import com.github.doctrey.telegram.client.facade.ChannelService;
-import com.github.doctrey.telegram.client.listener.ChannelJoinedListener;
-import com.github.doctrey.telegram.client.listener.Listener;
+import com.github.doctrey.telegram.client.listener.ListenerQueue;
 import org.telegram.api.engine.RpcException;
 import org.telegram.api.engine.TelegramApi;
 
@@ -29,10 +27,10 @@ public class ChannelSubscriptionTimer {
     private ChannelService channelService;
     private List<Integer> joinedChannels;
 
-    public ChannelSubscriptionTimer(TelegramApi api) {
+    public ChannelSubscriptionTimer(TelegramApi api, ListenerQueue listenerQueue) {
         this.api = api;
         timerThread = Executors.newSingleThreadScheduledExecutor();
-        channelService = new ChannelService(api);
+        channelService = new ChannelService(listenerQueue, api);
         joinedChannels = new ArrayList<>();
         joinedChannels = channelService.findJoinedChannels(((DbApiStorage) api.getState()).getPhoneNumber());
 
@@ -43,9 +41,18 @@ public class ChannelSubscriptionTimer {
             List<ChannelSubscriptionInfo> allPendingChannels = channelService.findAllPendingChannels();
             allPendingChannels.forEach(channel -> {
                 if (channel.getPlanExpiration().before(new Date())) {
-                    channelService.markChannel(channel.getId(), ChannelSubscriptionStatus.EXPIRED);
+                    if(joinedChannels.contains(channel.getId())) {
+                        try {
+                            channelService.leaveChannel(channel);
+                        } catch (IOException | TimeoutException e) {
 
-                } else if (channel.getMaxMember() > channel.getMemberCount() && !joinedChannels.contains(channel.getId())) { // even if expired?
+                        }
+                        joinedChannels.remove(channel.getId());
+                    }
+                    // TODO s_tayari: @s_tayari 4/17/2018 mark this in another timer when all left
+//                    channelService.markChannel(channel.getId(), ChannelSubscriptionStatus.EXPIRED);
+
+                } else if (channel.getMaxMember() > channel.getMemberCount() /*&& !joinedChannels.contains(channel.getId())*/) { // even if expired?
                     try {
                         channelService.joinChannel(channel);
                     } catch (IOException | TimeoutException e) {

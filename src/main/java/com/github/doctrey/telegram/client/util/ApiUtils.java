@@ -4,9 +4,7 @@ import com.github.doctrey.telegram.client.DbApiStorage;
 import com.github.doctrey.telegram.client.DefaultApiCallback;
 import com.github.doctrey.telegram.client.api.ApiConstants;
 import com.github.doctrey.telegram.client.update.AbsUpdatesHandler;
-import com.github.doctrey.telegram.client.update.impl.UpdateShortHandler;
-import com.github.doctrey.telegram.client.update.impl.UpdatesHandler;
-import com.github.doctrey.telegram.client.update.impl.UpdatesTooLongHandler;
+import com.github.doctrey.telegram.client.update.impl.*;
 import org.telegram.api.TLConfig;
 import org.telegram.api.TLNearestDc;
 import org.telegram.api.engine.AppInfo;
@@ -16,6 +14,7 @@ import org.telegram.api.functions.help.TLRequestHelpGetConfig;
 import org.telegram.api.functions.help.TLRequestHelpGetNearestDc;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -32,8 +31,9 @@ public class ApiUtils {
                 System.getenv("TL_DEVICE_MODEL"), System.getenv("TL_DEVICE_VERSION"), "0.0.1", "en"), apiCallback);
 
         List<AbsUpdatesHandler> updatesHandlers = new ArrayList<>();
-        updatesHandlers.add(new UpdatesHandler(api));
-        updatesHandlers.add(new UpdateShortHandler(api));
+        ChannelNewMessageHandler channelNewMessageHandler = new ChannelNewMessageHandler(api);
+        updatesHandlers.add(new UpdatesHandler(api, Arrays.asList(channelNewMessageHandler)));
+        updatesHandlers.add(new UpdateShortHandler(api, Arrays.asList(new UserStatusHandler(api))));
         updatesHandlers.add(new UpdatesTooLongHandler(api));
 
         // setting handlers

@@ -1,7 +1,10 @@
 package com.github.doctrey.telegram.client.listener;
 
 import com.github.doctrey.telegram.client.AbstractRpcCallback;
+import com.github.doctrey.telegram.client.facade.ChannelService;
 import com.github.doctrey.telegram.client.listener.event.ChannelJoinedEvent;
+import com.github.doctrey.telegram.client.subscription.ChannelSubscriptionInfo;
+import com.github.doctrey.telegram.client.update.impl.ChannelNewMessageHandler;
 import com.github.doctrey.telegram.client.util.ConnectionPool;
 import com.github.doctrey.telegram.client.util.MessageUtils;
 import org.telegram.api.engine.Logger;
@@ -14,6 +17,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Soheil on 4/16/18.
@@ -22,34 +27,46 @@ public class ChannelJoinedListener implements Listener<ChannelJoinedEvent> {
 
     private static final String TAG = "ChannelJoinedListener";
 
-    private TelegramApi api;
-    private int groupId;
+    private int groupIdToPost;
+    private List<ChannelSubscriptionInfo> joinedChannels;
+    private ChannelService channelService;
+    private ChannelNewMessageHandler channelNewMessageHandler;
 
-    public ChannelJoinedListener(TelegramApi api) {
-        this.api = api;
-
+    public ChannelJoinedListener(ChannelNewMessageHandler channelNewMessageHandler) {
         try (Connection connection = ConnectionPool.getInstance().getConnection();
              PreparedStatement statement = connection.prepareStatement("SELECT group_id FROM tl_admin_groups WHERE group_type = ?")) {
             statement.setInt(1, EventType.JOIN_CHANNEL.getCode());
             try (ResultSet rs = statement.executeQuery()) {
                 if (rs.next()) {
-                    groupId = rs.getInt(1);
+                    groupIdToPost = rs.getInt(1);
                 }
             }
         } catch (SQLException e) {
             Logger.e(TAG, e);
         }
+
+        this.joinedChannels = new ArrayList<>();
+        channelService = new ChannelService();
+        this.channelNewMessageHandler = channelNewMessageHandler;
+    }
+
+
+    @Override
+    public Class<ChannelJoinedEvent> getEventClass() {
+        return ChannelJoinedEvent.class;
     }
 
     @Override
     public void inform(ChannelJoinedEvent event) {
-        assert groupId != 0;
+        assert groupIdToPost != 0;
+
+        TelegramApi api = event.getApi();
 
         TLInputPeerChat inputPeerChat = new TLInputPeerChat();
-        inputPeerChat.setChatId(groupId);
+        inputPeerChat.setChatId(groupIdToPost);
         TLRequestMessagesSendMessage sendMessage = new TLRequestMessagesSendMessage();
         sendMessage.setRandomId(MessageUtils.generateRandomId());
-        sendMessage.setMessage("Joined channel " + event.getTlObject().getChannelId() + ".");
+        sendMessage.setMessage("Joined channel " + event.getEventObject().getChannelId() + ".");
         sendMessage.setPeer(inputPeerChat);
 
         api.doRpcCall(sendMessage, new AbstractRpcCallback<TLAbsUpdates>() {
@@ -58,5 +75,13 @@ public class ChannelJoinedListener implements Listener<ChannelJoinedEvent> {
 
             }
         });
+
+        if(!joinedChannels.contains(event.getEventObject())) {
+            joinedChannels.add(event.getEventObject());
+
+            channelService.setApi(event.getApi());
+            channelService.updateChannelIdAndHash(event.getEventObject());
+            channelNewMessageHandler.getChannelWhiteList().add(event.getEventObject().getChannelId());
+        }
     }
 }

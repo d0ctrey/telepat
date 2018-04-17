@@ -2,6 +2,7 @@ package com.github.doctrey.telegram.client.facade;
 
 import com.github.doctrey.telegram.client.AbstractRpcCallback;
 import com.github.doctrey.telegram.client.DbApiStorage;
+import com.github.doctrey.telegram.client.listener.ListenerQueue;
 import com.github.doctrey.telegram.client.util.ConnectionPool;
 import org.telegram.api.account.TLAccountPasswordInputSettings;
 import org.telegram.api.engine.Logger;
@@ -22,10 +23,20 @@ public class SecurityService {
 
     private static final String TAG = "SecurityService";
 
+    private ListenerQueue listenerQueue;
     private TelegramApi api;
 
-    public SecurityService(TelegramApi api) {
+    public SecurityService(ListenerQueue listenerQueue, TelegramApi api) {
+        this.listenerQueue = listenerQueue;
         this.api = api;
+    }
+
+    public SecurityService(ListenerQueue listenerQueue) {
+        this(listenerQueue, null);
+    }
+
+    public SecurityService() {
+        this(null);
     }
 
     // TODO: 4/16/18 make this work later. Refer to telegram android app.
@@ -66,5 +77,9 @@ public class SecurityService {
 
             }
         });
+    }
+
+    public void setApi(TelegramApi api) {
+        this.api = api;
     }
 }

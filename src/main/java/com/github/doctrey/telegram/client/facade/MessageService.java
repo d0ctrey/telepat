@@ -2,10 +2,9 @@ package com.github.doctrey.telegram.client.facade;
 
 import com.github.doctrey.telegram.client.AbstractRpcCallback;
 import com.github.doctrey.telegram.client.api.TLRequestMessagesGetMessagesViews;
-import com.github.doctrey.telegram.client.listener.MessageViewedListener;
+import com.github.doctrey.telegram.client.listener.ListenerQueue;
 import com.github.doctrey.telegram.client.listener.event.MessageViewedEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.github.doctrey.telegram.client.subscription.ChannelSubscriptionInfo;
 import org.telegram.api.chat.channel.TLChannel;
 import org.telegram.api.engine.TelegramApi;
 import org.telegram.api.functions.channels.TLRequestChannelsReadHistory;
@@ -19,7 +18,7 @@ import org.telegram.tl.TLBool;
 import org.telegram.tl.TLBoolTrue;
 import org.telegram.tl.TLIntVector;
 
-import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by Soheil on 12/24/17.
@@ -28,14 +27,22 @@ public class MessageService {
 
     private static final String TAG = "MessageService";
 
+    private List<ChannelSubscriptionInfo> channelWhiteList;
+    private ListenerQueue listenerQueue;
     private TelegramApi api;
-    private final Integer[] whiteList = {1343528547};
 
-    private MessageViewedListener messageViewedListener;
-
-    public MessageService(TelegramApi api) {
+    public MessageService(ListenerQueue listenerQueue, TelegramApi api) {
+        this.listenerQueue = listenerQueue;
         this.api = api;
-        messageViewedListener = new MessageViewedListener(api);
+        channelWhiteList = new ChannelService().findAllPendingChannels();
+    }
+
+    public MessageService(ListenerQueue listenerQueue) {
+        this(listenerQueue, null);
+    }
+
+    public MessageService() {
+        this(null);
     }
 
     public void markChannelHistoryAsRead(TLAbsMessage absMessage, TLChannel channel) {
@@ -44,7 +51,7 @@ public class MessageService {
             TLAbsPeer toPeer = message.getToId();
             if (toPeer instanceof TLPeerChannel) {
                 int channelId = toPeer.getId();
-                if (Arrays.asList(whiteList).contains(channelId)) {
+                if (channelWhiteList.stream().anyMatch(channelSubscriptionInfo -> channelSubscriptionInfo.getChannelId() == channelId)) {
                     TLInputChannel inputChannel = new TLInputChannel();
                     inputChannel.setChannelId(channel.getId());
                     inputChannel.setAccessHash(channel.getAccessHash());
@@ -72,7 +79,7 @@ public class MessageService {
                                 api.doRpcCall(messagesViews, new AbstractRpcCallback<TLIntVector>() {
                                     @Override
                                     public void onResult(TLIntVector result) {
-                                        messageViewedListener.inform(new MessageViewedEvent(inputPeerChannel));
+                                        listenerQueue.publish(new MessageViewedEvent(inputPeerChannel, api));
                                     }
                                 });
                             }
@@ -81,5 +88,9 @@ public class MessageService {
                 }
             }
         }
+    }
+
+    public void setApi(TelegramApi api) {
+        this.api = api;
     }
 }

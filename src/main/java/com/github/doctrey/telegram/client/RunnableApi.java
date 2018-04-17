@@ -1,11 +1,10 @@
 package com.github.doctrey.telegram.client;
 
 import com.github.doctrey.telegram.client.api.ApiConstants;
+import com.github.doctrey.telegram.client.listener.*;
 import com.github.doctrey.telegram.client.subscription.ChannelSubscriptionTimer;
 import com.github.doctrey.telegram.client.update.AbsUpdatesHandler;
-import com.github.doctrey.telegram.client.update.impl.UpdateShortHandler;
-import com.github.doctrey.telegram.client.update.impl.UpdatesHandler;
-import com.github.doctrey.telegram.client.update.impl.UpdatesTooLongHandler;
+import com.github.doctrey.telegram.client.update.impl.*;
 import org.telegram.api.engine.AppInfo;
 import org.telegram.api.engine.Logger;
 import org.telegram.api.engine.TelegramApi;
@@ -18,6 +17,7 @@ import org.telegram.api.user.TLUserFull;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
@@ -29,6 +29,7 @@ public class RunnableApi implements Runnable {
     private static final String TAG = "RunnableApi";
 
     private String phoneNumber;
+    private ListenerQueue listenerQueue;
 
     @Override
     public void run() {
@@ -38,8 +39,9 @@ public class RunnableApi implements Runnable {
                 System.getenv("TL_DEVICE_MODEL"), System.getenv("TL_DEVICE_VERSION"), "0.0.1", "en"), apiCallback);
 
         List<AbsUpdatesHandler> updatesHandlers = new ArrayList<>();
-        updatesHandlers.add(new UpdatesHandler(api));
-        updatesHandlers.add(new UpdateShortHandler(api));
+        ChannelNewMessageHandler channelNewMessageHandler = new ChannelNewMessageHandler(api);
+        updatesHandlers.add(new UpdatesHandler(api, Arrays.asList(channelNewMessageHandler)));
+        updatesHandlers.add(new UpdateShortHandler(api, Arrays.asList(new UserStatusHandler(api))));
         updatesHandlers.add(new UpdatesTooLongHandler(api));
 
         // setting handlers
@@ -66,7 +68,14 @@ public class RunnableApi implements Runnable {
             }
         });
 
-        ChannelSubscriptionTimer subscriptionTimer = new ChannelSubscriptionTimer(api);
+
+        listenerQueue.getListeners().addAll(Arrays.asList(
+                new ChannelJoinedListener(channelNewMessageHandler),
+                new ClientJoinedListener(),
+                new MessageViewedListener()
+        ));
+
+        ChannelSubscriptionTimer subscriptionTimer = new ChannelSubscriptionTimer(api, listenerQueue);
         subscriptionTimer.startCheckingSubscriptions();
         /*ClientJoinedListener joinedListenerService = new ClientJoinedListener(api);
         joinedListenerService.inform(new TLInputPeerSelf());*/
@@ -77,5 +86,9 @@ public class RunnableApi implements Runnable {
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    public void setListenerQueue(ListenerQueue listenerQueue) {
+        this.listenerQueue = listenerQueue;
     }
 }
