@@ -10,11 +10,14 @@ public class ChannelSubscriptionInfo {
     private int id;
     private String inviteLink;
     private int channelId;
+    private ChannelType channelType;
     private int planId;
     private Date planStart;
     private Date planExpiration;
     private int memberCount;
+    private String publicLink;
     private ChannelSubscriptionStatus subscriptionStatus;
+    private int maxMember;
 
     public int getId() {
         return id;
@@ -38,6 +41,14 @@ public class ChannelSubscriptionInfo {
 
     public void setChannelId(int channelId) {
         this.channelId = channelId;
+    }
+
+    public ChannelType getChannelType() {
+        return channelType;
+    }
+
+    public void setChannelType(ChannelType channelType) {
+        this.channelType = channelType;
     }
 
     public int getPlanId() {
@@ -72,11 +83,27 @@ public class ChannelSubscriptionInfo {
         this.memberCount = memberCount;
     }
 
+    public String getPublicLink() {
+        return publicLink;
+    }
+
+    public void setPublicLink(String publicLink) {
+        this.publicLink = publicLink;
+    }
+
     public ChannelSubscriptionStatus getSubscriptionStatus() {
         return subscriptionStatus;
     }
 
     public void setSubscriptionStatus(ChannelSubscriptionStatus subscriptionStatus) {
         this.subscriptionStatus = subscriptionStatus;
+    }
+
+    public int getMaxMember() {
+        return maxMember;
+    }
+
+    public void setMaxMember(int maxMember) {
+        this.maxMember = maxMember;
     }
 }

@@ -15,9 +15,9 @@ import java.util.concurrent.TimeoutException;
 /**
  * Created by s_tayari on 4/12/2018.
  */
-public class VerificationRunnable implements Callable<TelegramApi> {
+public class VerificationCallable implements Callable<TelegramApi> {
 
-    private static final String TAG = "VerificationRunnable";
+    private static final String TAG = "VerificationCallable";
 
     private TelegramApi api;
     private String phoneNumber;

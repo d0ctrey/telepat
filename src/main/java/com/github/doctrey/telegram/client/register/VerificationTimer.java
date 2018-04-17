@@ -26,7 +26,6 @@ public class VerificationTimer {
     private ExecutorService verificationThreads;
     private Map<String, TelegramApi> registeredApis;
     private Map<String, TelegramApi> newlyRegisteredApis;
-    private boolean allThreadsDone;
 
     public VerificationTimer(RegistrationTimer registrationTimer) {
         this.registeredApis = registrationTimer.getRegisteredApis();
@@ -51,14 +50,13 @@ public class VerificationTimer {
             }
 
             if(phoneNumberToCodeMap.isEmpty()) {
-                allThreadsDone = true;
                 return;
             }
 
             // start verifying numbers
             List<Future> futureList = new ArrayList<>();
             for(String number : phoneNumberToCodeMap.keySet()) {
-                VerificationRunnable runnable = new VerificationRunnable();
+                VerificationCallable runnable = new VerificationCallable();
                 if(registeredApis.containsKey(number)) {
                     runnable.setApi(registeredApis.get(number));
                 } else {
@@ -72,15 +70,9 @@ public class VerificationTimer {
 
             }
 
-            this.allThreadsDone = true;
-
         }, 50000, 1 * 30 * 1000, TimeUnit.MILLISECONDS);
     }
 
-
-    public void stopVerifying() {
-        verificationTimerThreads.shutdown();
-    }
 
     @SuppressWarnings("Duplicates")
     private boolean allThreadsDone(List<Future> futureList) {
@@ -98,9 +90,5 @@ public class VerificationTimer {
         }
 
         return true;
-    }
-
-    public boolean isAllThreadsDone() {
-        return allThreadsDone;
     }
 }

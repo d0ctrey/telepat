@@ -2,7 +2,8 @@ package com.github.doctrey.telegram.client.facade;
 
 import com.github.doctrey.telegram.client.AbstractRpcCallback;
 import com.github.doctrey.telegram.client.api.TLRequestMessagesGetMessagesViews;
-import com.github.doctrey.telegram.client.listener.ChannelViewedListener;
+import com.github.doctrey.telegram.client.listener.MessageViewedListener;
+import com.github.doctrey.telegram.client.listener.event.MessageViewedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.telegram.api.chat.channel.TLChannel;
@@ -25,16 +26,16 @@ import java.util.Arrays;
  */
 public class MessageService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MessageService.class);
+    private static final String TAG = "MessageService";
 
     private TelegramApi api;
     private final Integer[] whiteList = {1343528547};
 
-    private ChannelViewedListener channelViewedListenerService;
+    private MessageViewedListener messageViewedListener;
 
     public MessageService(TelegramApi api) {
         this.api = api;
-        channelViewedListenerService = new ChannelViewedListener(api);
+        messageViewedListener = new MessageViewedListener(api);
     }
 
     public void markChannelHistoryAsRead(TLAbsMessage absMessage, TLChannel channel) {
@@ -71,7 +72,7 @@ public class MessageService {
                                 api.doRpcCall(messagesViews, new AbstractRpcCallback<TLIntVector>() {
                                     @Override
                                     public void onResult(TLIntVector result) {
-                                        channelViewedListenerService.inform(inputPeerChannel);
+                                        messageViewedListener.inform(new MessageViewedEvent(inputPeerChannel));
                                     }
                                 });
                             }

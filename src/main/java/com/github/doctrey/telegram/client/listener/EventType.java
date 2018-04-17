@@ -5,7 +5,7 @@ package com.github.doctrey.telegram.client.listener;
  */
 public enum EventType {
 
-    VIEW_CHANNEL_POST(1), JOINED(2);
+    VIEW_CHANNEL_POST(1), JOIN_CHANNEL(1);
 
     private int code;
 

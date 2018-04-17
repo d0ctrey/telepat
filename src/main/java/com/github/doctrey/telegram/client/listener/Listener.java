@@ -1,11 +1,11 @@
 package com.github.doctrey.telegram.client.listener;
 
-import org.telegram.tl.TLObject;
+import com.github.doctrey.telegram.client.listener.event.Event;
 
 /**
  * Created by Soheil on 12/28/17.
  */
-public interface Listener<T extends TLObject> {
+public interface Listener<T extends Event> {
 
-    void inform(T tlObject);
+    void inform(T event);
 }

@@ -1,30 +1,30 @@
 package com.github.doctrey.telegram.client.listener;
 
 import com.github.doctrey.telegram.client.facade.GroupService;
+import com.github.doctrey.telegram.client.listener.event.ClientJoinedEvent;
 import org.telegram.api.engine.TelegramApi;
-import org.telegram.api.input.peer.TLInputPeerSelf;
 
 /**
  * Created by s_tayari on 4/15/2018.
  */
-public class MemberJoinedListener implements Listener<TLInputPeerSelf> {
+public class ClientJoinedListener implements Listener<ClientJoinedEvent> {
 
-    private static final String TAG = "MemberJoinedListener";
+    private static final String TAG = "ClientJoinedListener";
 
     private TelegramApi api;
     private GroupService groupService;
 
-    public MemberJoinedListener() {
+    public ClientJoinedListener() {
         this(null);
     }
 
-    public MemberJoinedListener(TelegramApi api) {
+    public ClientJoinedListener(TelegramApi api) {
         this.api = api;
         groupService = new GroupService(api);
     }
 
     @Override
-    public void inform(TLInputPeerSelf tlObject) {
+    public void inform(ClientJoinedEvent event) {
         groupService.joinAdminGroups();
     }
 

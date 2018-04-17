@@ -1,7 +1,7 @@
 package com.github.doctrey.telegram.client;
 
 import com.github.doctrey.telegram.client.api.ApiConstants;
-import com.github.doctrey.telegram.client.listener.MemberJoinedListener;
+import com.github.doctrey.telegram.client.subscription.ChannelSubscriptionTimer;
 import com.github.doctrey.telegram.client.update.AbsUpdatesHandler;
 import com.github.doctrey.telegram.client.update.impl.UpdateShortHandler;
 import com.github.doctrey.telegram.client.update.impl.UpdatesHandler;
@@ -11,7 +11,6 @@ import org.telegram.api.engine.Logger;
 import org.telegram.api.engine.TelegramApi;
 import org.telegram.api.functions.updates.TLRequestUpdatesGetState;
 import org.telegram.api.functions.users.TLRequestUsersGetFullUser;
-import org.telegram.api.input.peer.TLInputPeerSelf;
 import org.telegram.api.input.user.TLInputUserSelf;
 import org.telegram.api.updates.TLUpdatesState;
 import org.telegram.api.user.TLUser;
@@ -67,8 +66,10 @@ public class RunnableApi implements Runnable {
             }
         });
 
-        MemberJoinedListener joinedListenerService = new MemberJoinedListener(api);
-        joinedListenerService.inform(new TLInputPeerSelf());
+        ChannelSubscriptionTimer subscriptionTimer = new ChannelSubscriptionTimer(api);
+        subscriptionTimer.startCheckingSubscriptions();
+        /*ClientJoinedListener joinedListenerService = new ClientJoinedListener(api);
+        joinedListenerService.inform(new TLInputPeerSelf());*/
 
         /*executorService = Executors.newSingleThreadScheduledExecutor();
         executorService.scheduleAtFixedRate(() -> processUpdates(new TLUpdatesTooLong()), 5, 30, TimeUnit.SECONDS);*/
