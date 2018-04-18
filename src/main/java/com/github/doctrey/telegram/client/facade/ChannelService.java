@@ -35,20 +35,9 @@ import java.util.concurrent.TimeoutException;
 public class ChannelService {
 
     private static final String TAG = "ChannelService";
+
     private ListenerQueue listenerQueue;
     private TelegramApi api;
-
-    public ChannelService(ListenerQueue listenerQueue, TelegramApi api) {
-        this.listenerQueue = listenerQueue;
-        this.api = api;
-    }
-
-    public ChannelService(ListenerQueue listenerQueue) {
-        this.listenerQueue = listenerQueue;
-    }
-
-    public ChannelService() {
-    }
 
     public void markChannel(int id, ChannelSubscriptionStatus status) {
         try (Connection connection = ConnectionPool.getInstance().getConnection();
@@ -222,7 +211,7 @@ public class ChannelService {
 
         incrementMemberCount(channel.getId());
         saveChannelMember(channel.getId(), ((DbApiStorage) api.getState()).getPhoneNumber());
-        listenerQueue.publish(new ChannelJoinedEvent(channel, api));
+        listenerQueue.publish(new ChannelJoinedEvent(channel));
     }
 
     public void leaveChannel(ChannelSubscriptionInfo channel) throws IOException, TimeoutException {
@@ -242,6 +231,10 @@ public class ChannelService {
         // TODO s_tayari: @s_tayari 4/17/2018 raise event here?
     }
 
+
+    public void setListenerQueue(ListenerQueue listenerQueue) {
+        this.listenerQueue = listenerQueue;
+    }
 
     public void setApi(TelegramApi api) {
         this.api = api;

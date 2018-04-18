@@ -30,9 +30,14 @@ public class ChannelJoinedListener implements Listener<ChannelJoinedEvent> {
     private int groupIdToPost;
     private List<ChannelSubscriptionInfo> joinedChannels;
     private ChannelService channelService;
-    private ChannelNewMessageHandler channelNewMessageHandler;
+    private TelegramApi api;
 
-    public ChannelJoinedListener(ChannelNewMessageHandler channelNewMessageHandler) {
+    public ChannelJoinedListener(TelegramApi api) {
+        this.api = api;
+        this.joinedChannels = new ArrayList<>();
+        channelService = new ChannelService();
+        channelService.setApi(api);
+
         try (Connection connection = ConnectionPool.getInstance().getConnection();
              PreparedStatement statement = connection.prepareStatement("SELECT group_id FROM tl_admin_groups WHERE group_type = ?")) {
             statement.setInt(1, EventType.JOIN_CHANNEL.getCode());
@@ -44,10 +49,6 @@ public class ChannelJoinedListener implements Listener<ChannelJoinedEvent> {
         } catch (SQLException e) {
             Logger.e(TAG, e);
         }
-
-        this.joinedChannels = new ArrayList<>();
-        channelService = new ChannelService();
-        this.channelNewMessageHandler = channelNewMessageHandler;
     }
 
 
@@ -59,8 +60,6 @@ public class ChannelJoinedListener implements Listener<ChannelJoinedEvent> {
     @Override
     public void inform(ChannelJoinedEvent event) {
         assert groupIdToPost != 0;
-
-        TelegramApi api = event.getApi();
 
         TLInputPeerChat inputPeerChat = new TLInputPeerChat();
         inputPeerChat.setChatId(groupIdToPost);
@@ -79,9 +78,7 @@ public class ChannelJoinedListener implements Listener<ChannelJoinedEvent> {
         if(!joinedChannels.contains(event.getEventObject())) {
             joinedChannels.add(event.getEventObject());
 
-            channelService.setApi(event.getApi());
             channelService.updateChannelIdAndHash(event.getEventObject());
-            channelNewMessageHandler.getChannelWhiteList().add(event.getEventObject().getChannelId());
         }
     }
 }

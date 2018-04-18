@@ -28,17 +28,13 @@ public class TelegramClient {
     private static final int GROUP_ID = 1;
 
     public static void main(String[] args) {
-        List<Listener> listeners = new ArrayList<>();
-        listeners.add(new ClientJoinedListener());
-        ListenerQueue listenerQueue = new ListenerQueue(listeners);
-
         RegistrationTimer registrationTimer = new RegistrationTimer();
         registrationTimer.startCheckingForNewPhoneNumbers();
 
         VerificationTimer verificationTimer = new VerificationTimer(registrationTimer);
         verificationTimer.startVerifying();
 
-        NewClientTimer newClientTimer = new NewClientTimer(registrationTimer, listenerQueue);
+        NewClientTimer newClientTimer = new NewClientTimer(registrationTimer);
         newClientTimer.checkForNewClients();
 
         // find active clients
@@ -55,12 +51,14 @@ public class TelegramClient {
             Logger.e(TAG, e);
         }
 
+        List<Listener> listeners = new ArrayList<>();
+        ListenerQueue listenerQueue = new ListenerQueue(listeners);
+
         // start clients
         ExecutorService clientThreads = Executors.newFixedThreadPool(10);
         for(String phone : phoneNumbers) {
-            RunnableApi runnableApi = new RunnableApi();
+            RunnableApi runnableApi = new RunnableApi(listenerQueue);
             runnableApi.setPhoneNumber(phone);
-            runnableApi.setListenerQueue(listenerQueue);
             clientThreads.submit(runnableApi);
         }
 

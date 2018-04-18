@@ -30,7 +30,9 @@ public class ChannelSubscriptionTimer {
     public ChannelSubscriptionTimer(TelegramApi api, ListenerQueue listenerQueue) {
         this.api = api;
         timerThread = Executors.newSingleThreadScheduledExecutor();
-        channelService = new ChannelService(listenerQueue, api);
+        channelService = new ChannelService();
+        channelService.setApi(api);
+        channelService.setListenerQueue(listenerQueue);
         joinedChannels = new ArrayList<>();
         joinedChannels = channelService.findJoinedChannels(((DbApiStorage) api.getState()).getPhoneNumber());
 

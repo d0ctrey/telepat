@@ -21,21 +21,9 @@ import java.util.List;
 public class GroupService {
 
     private static final String TAG = "GroupService";
+
     private TelegramApi api;
     private ListenerQueue listenerQueue;
-
-    public GroupService(ListenerQueue listenerQueue, TelegramApi api) {
-        this.api = api;
-        this.listenerQueue = listenerQueue;
-    }
-
-    public GroupService(ListenerQueue listenerQueue) {
-        this(listenerQueue, null);
-    }
-
-    public GroupService() {
-        this(null);
-    }
 
     public void joinAdminGroups() {
         List<String> inviteLinkList = new ArrayList<>();
@@ -68,5 +56,9 @@ public class GroupService {
 
     public void setApi(TelegramApi api) {
         this.api = api;
+    }
+
+    public void setListenerQueue(ListenerQueue listenerQueue) {
+        this.listenerQueue = listenerQueue;
     }
 }

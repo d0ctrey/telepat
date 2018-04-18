@@ -14,13 +14,10 @@ public class ClientJoinedListener implements Listener<ClientJoinedEvent> {
     private TelegramApi api;
     private GroupService groupService;
 
-    public ClientJoinedListener() {
-        this(null);
-    }
-
     public ClientJoinedListener(TelegramApi api) {
         this.api = api;
         groupService = new GroupService();
+        groupService.setApi(api);
     }
 
     @Override

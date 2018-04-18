@@ -26,28 +26,16 @@ public class RegistrationService {
 
     private static final String TAG = "RegistrationService";
 
-    private String phoneNumber;
     private TelegramApi api;
     private ListenerQueue listenerQueue;
-    private RpcUtils rpcUtils;
-
-    public RegistrationService(TelegramApi api, ListenerQueue listenerQueue) {
-        this.api = api;
-        this.listenerQueue = listenerQueue;
-        rpcUtils = new RpcUtils(api);
-        phoneNumber = ((DbApiStorage) api.getState()).getPhoneNumber();
-
-    }
-
-    public RegistrationService(ListenerQueue listenerQueue) {
-        this(null, listenerQueue);
-    }
 
     public RegistrationService() {
-        this(null);
     }
 
     public void sendCode() throws RegistrationException {
+        String phoneNumber = ((DbApiStorage) api.getState()).getPhoneNumber();
+        RpcUtils rpcUtils = new RpcUtils(api);
+
         TLRequestAuthSendCode requestAuthSendCode = new TLRequestAuthSendCode();
         requestAuthSendCode.setApiId(ApiConstants.API_ID);
         requestAuthSendCode.setApiHash(ApiConstants.API_HASH);
@@ -92,6 +80,8 @@ public class RegistrationService {
             }
         }*/
 
+        RpcUtils rpcUtils = new RpcUtils(api);
+        String phoneNumber = ((DbApiStorage) api.getState()).getPhoneNumber();
         boolean phoneRegistered = false;
         String codeHash = null;
         String securityCode = null;

@@ -1,11 +1,17 @@
 package com.github.doctrey.telegram.client.register;
 
+import com.github.doctrey.telegram.client.RunnableApi;
+import com.github.doctrey.telegram.client.listener.ClientJoinedListener;
+import com.github.doctrey.telegram.client.listener.Listener;
 import com.github.doctrey.telegram.client.listener.ListenerQueue;
 import com.github.doctrey.telegram.client.listener.event.ClientJoinedEvent;
 import org.telegram.api.engine.TelegramApi;
 import org.telegram.api.input.peer.TLInputPeerSelf;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -16,14 +22,15 @@ import java.util.concurrent.TimeUnit;
 public class NewClientTimer {
 
     private ScheduledExecutorService timerThread;
+    private ExecutorService clientThreads;
+
 
     private RegistrationTimer registrationTimer;
-    private ListenerQueue listenerQueue;
 
-    public NewClientTimer(RegistrationTimer registrationTimer, ListenerQueue listenerQueue) {
+    public NewClientTimer(RegistrationTimer registrationTimer) {
         this.registrationTimer = registrationTimer;
-        this.listenerQueue = listenerQueue;
         timerThread = Executors.newSingleThreadScheduledExecutor();
+        clientThreads = Executors.newFixedThreadPool(10);
     }
 
     public void checkForNewClients() {
@@ -34,7 +41,17 @@ public class NewClientTimer {
             if(registrationTimer.isClientsUpdated()) {
                 Map<String, TelegramApi> registeredApis = registrationTimer.getNewlyRegisteredApis();
                 for(String number : registeredApis.keySet()) {
-                    listenerQueue.publish(new ClientJoinedEvent(new TLInputPeerSelf(), registeredApis.get(number)));
+                    TelegramApi api = registeredApis.get(number);
+                    List<Listener> listeners = new ArrayList<>();
+                    listeners.add(new ClientJoinedListener(api));
+                    ListenerQueue listenerQueue = new ListenerQueue(listeners);
+
+                    RunnableApi runnableApi = new RunnableApi();
+                    runnableApi.setApi(api);
+                    runnableApi.setListenerQueue(listenerQueue);
+                    clientThreads.submit(runnableApi);
+
+                    listenerQueue.publish(new ClientJoinedEvent(new TLInputPeerSelf()));
                 }
             }
 

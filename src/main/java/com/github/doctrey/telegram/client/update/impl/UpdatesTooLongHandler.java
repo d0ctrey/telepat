@@ -10,13 +10,6 @@ import org.telegram.api.updates.TLUpdatesTooLong;
  */
 public class UpdatesTooLongHandler implements AbsUpdatesHandler<TLUpdatesTooLong> {
 
-    private TelegramApi api;
-
-
-    public UpdatesTooLongHandler(TelegramApi api) {
-        this.api = api;
-    }
-
     @Override
     public boolean canProcess(int updatesClassId) {
         return TLUpdatesTooLong.CLASS_ID == updatesClassId;

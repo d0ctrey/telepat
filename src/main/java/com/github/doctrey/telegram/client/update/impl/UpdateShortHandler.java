@@ -14,10 +14,8 @@ import java.util.List;
 public class UpdateShortHandler implements AbsUpdatesHandler<TLUpdateShort> {
 
     private List<AbsUpdateHandler> updateHandlers = new ArrayList<>();
-    private TelegramApi api;
 
-    public UpdateShortHandler(TelegramApi api, List<? extends AbsUpdateHandler> absUpdateHandlers) {
-        this.api = api;
+    public UpdateShortHandler(List<? extends AbsUpdateHandler> absUpdateHandlers) {
         updateHandlers.addAll(absUpdateHandlers);
     }
 

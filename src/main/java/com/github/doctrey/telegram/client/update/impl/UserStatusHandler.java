@@ -1,6 +1,7 @@
 package com.github.doctrey.telegram.client.update.impl;
 
 import com.github.doctrey.telegram.client.AbstractRpcCallback;
+import com.github.doctrey.telegram.client.listener.ListenerQueue;
 import com.github.doctrey.telegram.client.update.AbsUpdateHandler;
 import org.telegram.api.engine.TelegramApi;
 import org.telegram.api.functions.users.TLRequestUsersGetFullUser;
@@ -16,12 +17,10 @@ import org.telegram.api.user.status.TLUserStatusOnline;
 /**
  * Created by s_tayari on 12/24/2017.
  */
-public class UserStatusHandler implements AbsUpdateHandler<TLUpdateShort, TLUpdateUserStatus> {
+public class UserStatusHandler extends AbstractAbsUpdateHandler<TLUpdateShort, TLUpdateUserStatus> {
 
-    private TelegramApi api;
-
-    public UserStatusHandler(TelegramApi api) {
-        this.api = api;
+    public UserStatusHandler(ListenerQueue listenerQueue) {
+        super(listenerQueue);
     }
 
     @Override
@@ -53,14 +52,14 @@ public class UserStatusHandler implements AbsUpdateHandler<TLUpdateShort, TLUpda
         TLInputUser inputUser = new TLInputUser();
         inputUser.setUserId(userId);
         getFullUser.setId(inputUser);
-        api.doRpcCall(getFullUser, new AbstractRpcCallback<TLUserFull>() {
-            @Override
-            public void onResult(TLUserFull result) {
-                if (result.getUser() instanceof TLUser)
-                    System.out.println("=============================================");
-                    System.out.println(((TLUser) result.getUser()).getFirstName() + " " + ((TLUser) result.getUser()).getLastName() + " is [" + finalStatusString + "]");
-                    System.out.println("=============================================");
-            }
-        });
+//        api.doRpcCall(getFullUser, new AbstractRpcCallback<TLUserFull>() {
+//            @Override
+//            public void onResult(TLUserFull result) {
+//                if (result.getUser() instanceof TLUser)
+//                    System.out.println("=============================================");
+//                    System.out.println(((TLUser) result.getUser()).getFirstName() + " " + ((TLUser) result.getUser()).getLastName() + " is [" + finalStatusString + "]");
+//                    System.out.println("=============================================");
+//            }
+//        });
     }
 }

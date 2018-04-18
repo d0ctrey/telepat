@@ -8,7 +8,7 @@ import org.telegram.api.input.peer.TLInputPeerSelf;
  */
 public class ClientJoinedEvent extends AbstractEvent<TLInputPeerSelf> {
 
-    public ClientJoinedEvent(TLInputPeerSelf eventObject, TelegramApi api) {
-        super(eventObject, api);
+    public ClientJoinedEvent(TLInputPeerSelf eventObject) {
+        super(eventObject);
     }
 }

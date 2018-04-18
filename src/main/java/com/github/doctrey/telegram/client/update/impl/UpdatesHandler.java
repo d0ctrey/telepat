@@ -15,10 +15,8 @@ import java.util.List;
 public class UpdatesHandler implements AbsUpdatesHandler<TLUpdates> {
 
     private List<AbsUpdateHandler> updateHandlers = new ArrayList<>();
-    private TelegramApi api;
 
-    public UpdatesHandler(TelegramApi api, List<? extends AbsUpdateHandler> absUpdateHandlers) {
-        this.api = api;
+    public UpdatesHandler(List<? extends AbsUpdateHandler> absUpdateHandlers) {
         updateHandlers.addAll(absUpdateHandlers);
     }
 

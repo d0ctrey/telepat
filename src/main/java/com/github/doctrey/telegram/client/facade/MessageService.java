@@ -31,18 +31,10 @@ public class MessageService {
     private ListenerQueue listenerQueue;
     private TelegramApi api;
 
-    public MessageService(ListenerQueue listenerQueue, TelegramApi api) {
+    public MessageService() {
         this.listenerQueue = listenerQueue;
         this.api = api;
         channelWhiteList = new ChannelService().findAllPendingChannels();
-    }
-
-    public MessageService(ListenerQueue listenerQueue) {
-        this(listenerQueue, null);
-    }
-
-    public MessageService() {
-        this(null);
     }
 
     public void markChannelHistoryAsRead(TLAbsMessage absMessage, TLChannel channel) {
@@ -79,7 +71,7 @@ public class MessageService {
                                 api.doRpcCall(messagesViews, new AbstractRpcCallback<TLIntVector>() {
                                     @Override
                                     public void onResult(TLIntVector result) {
-                                        listenerQueue.publish(new MessageViewedEvent(inputPeerChannel, api));
+                                        listenerQueue.publish(new MessageViewedEvent(inputPeerChannel));
                                     }
                                 });
                             }
@@ -92,5 +84,9 @@ public class MessageService {
 
     public void setApi(TelegramApi api) {
         this.api = api;
+    }
+
+    public void setListenerQueue(ListenerQueue listenerQueue) {
+        this.listenerQueue = listenerQueue;
     }
 }

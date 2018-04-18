@@ -3,6 +3,7 @@ package com.github.doctrey.telegram.client.update.impl;
 import com.github.doctrey.telegram.client.DbApiStorage;
 import com.github.doctrey.telegram.client.facade.ChannelService;
 import com.github.doctrey.telegram.client.facade.MessageService;
+import com.github.doctrey.telegram.client.listener.ListenerQueue;
 import com.github.doctrey.telegram.client.update.AbsUpdateHandler;
 import org.telegram.api.chat.TLAbsChat;
 import org.telegram.api.chat.channel.TLChannel;
@@ -21,18 +22,15 @@ import java.util.Optional;
 /**
  * Created by s_tayari on 12/24/2017.
  */
-public class ChannelNewMessageHandler implements AbsUpdateHandler<TLUpdates, TLUpdateChannelNewMessage> {
+public class ChannelNewMessageHandler extends AbstractAbsUpdateHandler<TLUpdates, TLUpdateChannelNewMessage> {
 
-    private TelegramApi api;
     private MessageService messageService;
     private ChannelService channelService;
-    private List<Integer> channelWhiteList;
 
-    public ChannelNewMessageHandler(TelegramApi api) {
-        this.api = api;
+    public ChannelNewMessageHandler(ListenerQueue listenerQueue) {
+        super(listenerQueue);
         messageService = new MessageService();
         channelService = new ChannelService();
-        channelWhiteList = channelService.findJoinedChannels(((DbApiStorage) api.getState()).getPhoneNumber());
     }
 
     @Override
@@ -46,11 +44,11 @@ public class ChannelNewMessageHandler implements AbsUpdateHandler<TLUpdates, TLU
         if (absMessage instanceof TLMessage) {
             TLMessage message = (TLMessage) absMessage;
             TLAbsPeer toId = message.getToId();
-            if (!channelWhiteList.contains(toId.getId()))
+//            if (!channelWhiteList.contains(toId.getId()))
                 return;
-            TLChannel channel = (TLChannel) findChannel(updatesContext, toId.getId());
-            messageService.setApi(api);
-            messageService.markChannelHistoryAsRead(updateChannelNewMessage.getMessage(), channel);
+//            TLChannel channel = (TLChannel) findChannel(updatesContext, toId.getId());
+//            messageService.setApi(api);
+//            messageService.markChannelHistoryAsRead(updateChannelNewMessage.getMessage(), channel);
         }
     }
 
@@ -59,7 +57,4 @@ public class ChannelNewMessageHandler implements AbsUpdateHandler<TLUpdates, TLU
         return first.orElse(null);
     }
 
-    public List<Integer> getChannelWhiteList() {
-        return channelWhiteList;
-    }
 }
