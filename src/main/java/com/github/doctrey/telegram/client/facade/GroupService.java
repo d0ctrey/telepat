@@ -25,6 +25,10 @@ public class GroupService {
     private TelegramApi api;
     private ListenerQueue listenerQueue;
 
+    public GroupService(ListenerQueue listenerQueue) {
+        this.listenerQueue = listenerQueue;
+    }
+
     public void joinAdminGroups() {
         List<String> inviteLinkList = new ArrayList<>();
         try (Connection connection = ConnectionPool.getInstance().getConnection();
@@ -56,9 +60,5 @@ public class GroupService {
 
     public void setApi(TelegramApi api) {
         this.api = api;
-    }
-
-    public void setListenerQueue(ListenerQueue listenerQueue) {
-        this.listenerQueue = listenerQueue;
     }
 }

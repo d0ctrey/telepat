@@ -1,7 +1,5 @@
 package com.github.doctrey.telegram.client;
 
-import com.github.doctrey.telegram.client.listener.ClientJoinedListener;
-import com.github.doctrey.telegram.client.listener.Listener;
 import com.github.doctrey.telegram.client.listener.ListenerQueue;
 import com.github.doctrey.telegram.client.register.NewClientTimer;
 import com.github.doctrey.telegram.client.register.PhoneNumberStatus;
@@ -51,13 +49,10 @@ public class TelegramClient {
             Logger.e(TAG, e);
         }
 
-        List<Listener> listeners = new ArrayList<>();
-        ListenerQueue listenerQueue = new ListenerQueue(listeners);
-
         // start clients
         ExecutorService clientThreads = Executors.newFixedThreadPool(10);
         for(String phone : phoneNumbers) {
-            RunnableApi runnableApi = new RunnableApi(listenerQueue);
+            RunnableApi runnableApi = new RunnableApi(new ListenerQueue());
             runnableApi.setPhoneNumber(phone);
             clientThreads.submit(runnableApi);
         }

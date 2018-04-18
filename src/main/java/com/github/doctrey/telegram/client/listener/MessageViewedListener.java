@@ -5,7 +5,6 @@ import com.github.doctrey.telegram.client.listener.event.MessageViewedEvent;
 import com.github.doctrey.telegram.client.util.ConnectionPool;
 import com.github.doctrey.telegram.client.util.MessageUtils;
 import org.telegram.api.engine.Logger;
-import org.telegram.api.engine.TelegramApi;
 import org.telegram.api.functions.messages.TLRequestMessagesSendMessage;
 import org.telegram.api.input.peer.TLInputPeerChat;
 import org.telegram.api.updates.TLAbsUpdates;
@@ -18,15 +17,14 @@ import java.sql.SQLException;
 /**
  * Created by Soheil on 12/28/17.
  */
-public class MessageViewedListener implements Listener<MessageViewedEvent> {
+public class MessageViewedListener extends AbstractListener<MessageViewedEvent> {
 
     private static final String TAG = "MessageViewedListener";
 
     private int groupId;
-    private TelegramApi api;
 
-    public MessageViewedListener(TelegramApi api) {
-        this.api = api;
+    public MessageViewedListener(ListenerQueue listenerQueue) {
+        super(listenerQueue);
         try (Connection connection = ConnectionPool.getInstance().getConnection();
              PreparedStatement statement = connection.prepareStatement("SELECT group_id FROM tl_admin_groups WHERE group_type = ?")) {
             statement.setInt(1, EventType.VIEW_CHANNEL_POST.getCode());
@@ -56,7 +54,7 @@ public class MessageViewedListener implements Listener<MessageViewedEvent> {
         sendMessage.setMessage("Read history of channel " + event.getEventObject().getChannelId() + ".");
         sendMessage.setPeer(inputPeerChat);
 
-        api.doRpcCall(sendMessage, new AbstractRpcCallback<TLAbsUpdates>() {
+        event.getApi().doRpcCall(sendMessage, new AbstractRpcCallback<TLAbsUpdates>() {
             @Override
             public void onResult(TLAbsUpdates result) {
 

@@ -4,6 +4,7 @@ import com.github.doctrey.telegram.client.api.ApiConstants;
 import com.github.doctrey.telegram.client.listener.*;
 import com.github.doctrey.telegram.client.subscription.ChannelSubscriptionTimer;
 import com.github.doctrey.telegram.client.update.AbsUpdatesHandler;
+import com.github.doctrey.telegram.client.update.UpdateQueue;
 import com.github.doctrey.telegram.client.update.impl.*;
 import org.telegram.api.engine.AppInfo;
 import org.telegram.api.engine.Logger;
@@ -28,12 +29,12 @@ public class RunnableApi implements Runnable {
 
     private static final String TAG = "RunnableApi";
 
-    private String phoneNumber;
     private ListenerQueue listenerQueue;
+    private String phoneNumber;
     private TelegramApi api;
 
-    public RunnableApi() {
-        listenerQueue = new ListenerQueue(new ArrayList<>());
+    public RunnableApi(ListenerQueue listenerQueue) {
+        this.listenerQueue = listenerQueue;
     }
 
     @Override
@@ -41,16 +42,18 @@ public class RunnableApi implements Runnable {
         if(api == null) {
             DbApiStorage apiStateStorage = new DbApiStorage(phoneNumber);
             DefaultApiCallback apiCallback = new DefaultApiCallback();
-            TelegramApi api = new TelegramApi(apiStateStorage, new AppInfo(ApiConstants.API_ID,
+            api = new TelegramApi(apiStateStorage, new AppInfo(ApiConstants.API_ID,
                     System.getenv("TL_DEVICE_MODEL"), System.getenv("TL_DEVICE_VERSION"), "0.0.1", "en"), apiCallback);
 
+            // creating handlers
             List<AbsUpdatesHandler> updatesHandlers = new ArrayList<>();
-            updatesHandlers.add(new UpdatesHandler(Arrays.asList(new ChannelNewMessageHandler(listenerQueue))));
-            updatesHandlers.add(new UpdateShortHandler(Arrays.asList(new UserStatusHandler(listenerQueue))));
+            updatesHandlers.add(new UpdatesHandler(Arrays.asList(new ChannelNewMessageHandler(api, listenerQueue))));
+            updatesHandlers.add(new UpdateShortHandler(Arrays.asList(new UserStatusHandler(api, listenerQueue))));
             updatesHandlers.add(new UpdatesTooLongHandler());
 
-            // setting handlers
-            apiCallback.setUpdatesHandlers(updatesHandlers);
+            UpdateQueue updateQueue = new UpdateQueue();
+            updateQueue.setUpdatesHandlers(updatesHandlers);
+            apiCallback.setUpdateQueue(updateQueue);
 
             DbApiUpdateState apiUpdateState = new DbApiUpdateState(phoneNumber.replaceAll("\\+", ""));
 //        if (apiUpdateState.getObj().getDate() == 0) {
@@ -64,8 +67,8 @@ public class RunnableApi implements Runnable {
         }
 
         listenerQueue.getListeners().addAll(Arrays.asList(
-                new ChannelJoinedListener(api),
-                new MessageViewedListener(api)
+                new ChannelJoinedListener(listenerQueue),
+                new MessageViewedListener(listenerQueue)
         ));
 
         TLRequestUsersGetFullUser getFullUser = new TLRequestUsersGetFullUser();
@@ -95,9 +98,5 @@ public class RunnableApi implements Runnable {
 
     public void setApi(TelegramApi api) {
         this.api = api;
-    }
-
-    public void setListenerQueue(ListenerQueue listenerQueue) {
-        this.listenerQueue = listenerQueue;
     }
 }

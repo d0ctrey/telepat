@@ -5,6 +5,7 @@ import com.github.doctrey.telegram.client.DefaultApiCallback;
 import com.github.doctrey.telegram.client.api.ApiConstants;
 import com.github.doctrey.telegram.client.listener.ListenerQueue;
 import com.github.doctrey.telegram.client.update.AbsUpdatesHandler;
+import com.github.doctrey.telegram.client.update.UpdateQueue;
 import com.github.doctrey.telegram.client.update.impl.*;
 import org.telegram.api.TLConfig;
 import org.telegram.api.TLNearestDc;
@@ -26,7 +27,7 @@ public class ApiUtils {
     private static final String TAG = "ApiUtils";
 
     public static TelegramApi createNewClient(String phoneNumber) {
-        ListenerQueue listenerQueue = new ListenerQueue(new ArrayList<>());
+        ListenerQueue listenerQueue = new ListenerQueue();
 
         DbApiStorage apiStateStorage = new DbApiStorage(phoneNumber);
         DefaultApiCallback apiCallback = new DefaultApiCallback();
@@ -34,13 +35,13 @@ public class ApiUtils {
                 System.getenv("TL_DEVICE_MODEL"), System.getenv("TL_DEVICE_VERSION"), "0.0.1", "en"), apiCallback);
 
         List<AbsUpdatesHandler> updatesHandlers = new ArrayList<>();
-        ChannelNewMessageHandler channelNewMessageHandler = new ChannelNewMessageHandler();
-        updatesHandlers.add(new UpdatesHandler(api, Arrays.asList(channelNewMessageHandler)));
-        updatesHandlers.add(new UpdateShortHandler(api, Arrays.asList(new UserStatusHandler(api))));
-        updatesHandlers.add(new UpdatesTooLongHandler(api));
+        updatesHandlers.add(new UpdatesHandler(Arrays.asList(new ChannelNewMessageHandler(api, listenerQueue))));
+        updatesHandlers.add(new UpdateShortHandler(Arrays.asList(new UserStatusHandler(api, listenerQueue))));
+        updatesHandlers.add(new UpdatesTooLongHandler());
 
-        // setting handlers
-        apiCallback.setUpdatesHandlers(updatesHandlers);
+        UpdateQueue updateQueue = new UpdateQueue();
+        updateQueue.setUpdatesHandlers(updatesHandlers);
+        apiCallback.setUpdateQueue(updateQueue);
 
         RpcUtils rpcUtils = new RpcUtils(api);
         TLConfig config = null;

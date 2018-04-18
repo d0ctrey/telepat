@@ -8,7 +8,7 @@ import org.telegram.api.input.peer.TLInputPeerChannel;
  */
 public class MessageViewedEvent extends AbstractEvent<TLInputPeerChannel> {
 
-    public MessageViewedEvent(TLInputPeerChannel eventObject) {
-        super(eventObject);
+    public MessageViewedEvent(TLInputPeerChannel eventObject, TelegramApi api) {
+        super(eventObject, api);
     }
 }

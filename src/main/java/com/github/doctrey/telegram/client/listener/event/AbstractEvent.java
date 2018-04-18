@@ -8,9 +8,11 @@ import org.telegram.api.engine.TelegramApi;
 public abstract class AbstractEvent<T> implements Event<T> {
 
     protected T eventObject;
+    protected TelegramApi api;
 
-    public AbstractEvent(T eventObject) {
+    public AbstractEvent(T eventObject, TelegramApi api) {
         this.eventObject = eventObject;
+        this.api = api;
     }
 
     @Override
@@ -18,4 +20,8 @@ public abstract class AbstractEvent<T> implements Event<T> {
         return eventObject;
     }
 
+    @Override
+    public TelegramApi getApi() {
+        return api;
+    }
 }

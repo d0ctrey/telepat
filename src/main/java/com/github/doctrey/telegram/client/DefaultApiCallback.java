@@ -1,13 +1,10 @@
 package com.github.doctrey.telegram.client;
 
-import com.github.doctrey.telegram.client.update.AbsUpdatesHandler;
+import com.github.doctrey.telegram.client.update.UpdateQueue;
 import org.telegram.api.engine.ApiCallback;
 import org.telegram.api.engine.Logger;
 import org.telegram.api.engine.TelegramApi;
 import org.telegram.api.updates.TLAbsUpdates;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by s_tayari on 4/12/2018.
@@ -16,7 +13,7 @@ public class DefaultApiCallback implements ApiCallback {
 
     private static final String TAG = "DefaultApiCallback";
 
-    private List<AbsUpdatesHandler> updatesHandlers = new ArrayList<>();
+    private UpdateQueue updateQueue;
 
     @Override
     public void onUpdatesInvalidated(TelegramApi _api) {
@@ -30,13 +27,10 @@ public class DefaultApiCallback implements ApiCallback {
 
     @Override
     public void onUpdate(TLAbsUpdates updates) {
-        for (AbsUpdatesHandler updatesHandler : updatesHandlers) {
-            if (updatesHandler.canProcess(updates.getClassId()))
-                updatesHandler.processUpdates(updates);
-        }
+        updateQueue.dispatch(updates);
     }
 
-    public void setUpdatesHandlers(List<AbsUpdatesHandler> updatesHandlers) {
-        this.updatesHandlers = updatesHandlers;
+    public void setUpdateQueue(UpdateQueue updateQueue) {
+        this.updateQueue = updateQueue;
     }
 }

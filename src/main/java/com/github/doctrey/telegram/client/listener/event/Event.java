@@ -8,4 +8,5 @@ import org.telegram.api.engine.TelegramApi;
 public interface Event<T> {
 
     T getEventObject();
+    TelegramApi getApi();
 }

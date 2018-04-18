@@ -2,6 +2,7 @@ package com.github.doctrey.telegram.client.listener;
 
 import com.github.doctrey.telegram.client.listener.event.Event;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -10,6 +11,10 @@ import java.util.List;
 public class ListenerQueue {
 
     private List<Listener> listeners;
+
+    public ListenerQueue() {
+        listeners = new ArrayList<>();
+    }
 
     public ListenerQueue(List<Listener> listeners) {
         this.listeners = listeners;

@@ -4,11 +4,9 @@ import com.github.doctrey.telegram.client.AbstractRpcCallback;
 import com.github.doctrey.telegram.client.facade.ChannelService;
 import com.github.doctrey.telegram.client.listener.event.ChannelJoinedEvent;
 import com.github.doctrey.telegram.client.subscription.ChannelSubscriptionInfo;
-import com.github.doctrey.telegram.client.update.impl.ChannelNewMessageHandler;
 import com.github.doctrey.telegram.client.util.ConnectionPool;
 import com.github.doctrey.telegram.client.util.MessageUtils;
 import org.telegram.api.engine.Logger;
-import org.telegram.api.engine.TelegramApi;
 import org.telegram.api.functions.messages.TLRequestMessagesSendMessage;
 import org.telegram.api.input.peer.TLInputPeerChat;
 import org.telegram.api.updates.TLAbsUpdates;
@@ -23,20 +21,18 @@ import java.util.List;
 /**
  * Created by Soheil on 4/16/18.
  */
-public class ChannelJoinedListener implements Listener<ChannelJoinedEvent> {
+public class ChannelJoinedListener extends AbstractListener<ChannelJoinedEvent> {
 
     private static final String TAG = "ChannelJoinedListener";
 
     private int groupIdToPost;
     private List<ChannelSubscriptionInfo> joinedChannels;
     private ChannelService channelService;
-    private TelegramApi api;
 
-    public ChannelJoinedListener(TelegramApi api) {
-        this.api = api;
+    public ChannelJoinedListener(ListenerQueue listenerQueue) {
+        super(listenerQueue);
         this.joinedChannels = new ArrayList<>();
-        channelService = new ChannelService();
-        channelService.setApi(api);
+        channelService = new ChannelService(listenerQueue);
 
         try (Connection connection = ConnectionPool.getInstance().getConnection();
              PreparedStatement statement = connection.prepareStatement("SELECT group_id FROM tl_admin_groups WHERE group_type = ?")) {
@@ -68,7 +64,7 @@ public class ChannelJoinedListener implements Listener<ChannelJoinedEvent> {
         sendMessage.setMessage("Joined channel " + event.getEventObject().getChannelId() + ".");
         sendMessage.setPeer(inputPeerChat);
 
-        api.doRpcCall(sendMessage, new AbstractRpcCallback<TLAbsUpdates>() {
+        event.getApi().doRpcCall(sendMessage, new AbstractRpcCallback<TLAbsUpdates>() {
             @Override
             public void onResult(TLAbsUpdates result) {
 

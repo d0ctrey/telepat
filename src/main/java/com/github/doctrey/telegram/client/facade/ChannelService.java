@@ -24,9 +24,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeoutException;
 
 /**
@@ -38,6 +36,10 @@ public class ChannelService {
 
     private ListenerQueue listenerQueue;
     private TelegramApi api;
+
+    public ChannelService(ListenerQueue listenerQueue) {
+        this.listenerQueue = listenerQueue;
+    }
 
     public void markChannel(int id, ChannelSubscriptionStatus status) {
         try (Connection connection = ConnectionPool.getInstance().getConnection();
@@ -64,22 +66,50 @@ public class ChannelService {
         }
     }
 
-    public List<Integer> findJoinedChannels(String phoneNumber) {
-        List<Integer> joinedChannels = new ArrayList<>();
+    public Map<Integer, Long> findJoinedChannels(String phoneNumber) {
+        Map<Integer, Long> joinedChannels = new HashMap<>();
         try (Connection connection = ConnectionPool.getInstance().getConnection();
-             PreparedStatement statement = connection.prepareStatement("SELECT channels_id FROM tl_channel_members WHERE phone_number = ?")) {
+             PreparedStatement statement = connection.prepareStatement("SELECT channels_id, access_hash FROM tl_channel_members WHERE phone_number = ?")) {
             statement.setString(1, phoneNumber);
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
-                    joinedChannels.add(rs.getInt(1));
+                    joinedChannels.put(rs.getInt(1), rs.getLong(2));
                 }
             }
 
             return joinedChannels;
         } catch (SQLException e) {
             Logger.e(TAG, e);
-            return Collections.emptyList();
+            return Collections.emptyMap();
         }
+    }
+
+    public ChannelSubscriptionInfo findChannel(int id) {
+        try (Connection connection = ConnectionPool.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement("SELECT * FROM tl_channels WHERE id = ?")) {
+            statement.setInt(1, id);
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    ChannelSubscriptionInfo info = new ChannelSubscriptionInfo();
+                    info.setId(rs.getInt(1));
+                    info.setInviteLink(rs.getString(2));
+                    info.setChannelId(rs.getInt(3));
+                    info.setPlanId(rs.getInt(4));
+                    info.setPlanStart(rs.getDate(5));
+                    info.setPlanExpiration(rs.getDate(6));
+                    info.setMemberCount(rs.getInt(7));
+                    info.setSubscriptionStatus(ChannelSubscriptionStatus.withCode(rs.getInt(8)));
+                    info.setMaxMember(rs.getInt(9));
+                    info.setPublicLink(rs.getString(10));
+                    info.setChannelType(ChannelType.withCode(rs.getInt(11)));
+                    return info;
+                }
+            }
+        } catch (SQLException e) {
+            Logger.e(TAG, e);
+        }
+
+        return null;
     }
 
     public List<ChannelSubscriptionInfo> findAllPendingChannels() {
@@ -101,7 +131,6 @@ public class ChannelService {
                     info.setMaxMember(rs.getInt(9));
                     info.setPublicLink(rs.getString(10));
                     info.setChannelType(ChannelType.withCode(rs.getInt(11)));
-                    info.setAccessHash(rs.getLong(12));
                     subscriptionInfoList.add(info);
                 }
             }
@@ -124,7 +153,7 @@ public class ChannelService {
         }
     }
 
-    private void decrementMember(int channelId) {
+    public void decrementMember(int channelId) {
         try (Connection connection = ConnectionPool.getInstance().getConnection();
              PreparedStatement statement = connection.prepareStatement("UPDATE tl_channels SET member_count = member_count - 1 WHERE id = ?")
         ) {
@@ -135,10 +164,24 @@ public class ChannelService {
         }
     }
 
-    public void saveChannelMember(int channelId, String phoneNumber) {
+    public void saveChannelMember(int channelId, String phoneNumber, long hash) {
         try (
                 Connection conn = ConnectionPool.getInstance().getConnection();
-                PreparedStatement statement = conn.prepareStatement("INSERT INTO tl_channel_members VALUES (?, ?)")
+                PreparedStatement statement = conn.prepareStatement("INSERT INTO tl_channel_members VALUES (?, ?, ?)")
+        ) {
+            statement.setInt(1, channelId);
+            statement.setString(2, phoneNumber);
+            statement.setLong(3, hash);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            Logger.e(TAG, e);
+        }
+    }
+
+    public void removeChannelMember(int channelId, String phoneNumber) {
+        try (
+                Connection conn = ConnectionPool.getInstance().getConnection();
+                PreparedStatement statement = conn.prepareStatement("DELETE FROM tl_channel_members VALUES (?, ?)")
         ) {
             statement.setInt(1, channelId);
             statement.setString(2, phoneNumber);
@@ -148,20 +191,7 @@ public class ChannelService {
         }
     }
 
-    private void removeChannelMember(int channelId, String phoneNumber) {
-        try (
-                Connection conn = ConnectionPool.getInstance().getConnection();
-                PreparedStatement statement = conn.prepareStatement("DELETE tl_channel_members VALUES (?, ?)")
-        ) {
-            statement.setInt(1, channelId);
-            statement.setString(2, phoneNumber);
-            statement.executeUpdate();
-        } catch (SQLException e) {
-            Logger.e(TAG, e);
-        }
-    }
-
-    public void joinChannel(ChannelSubscriptionInfo channel) throws IOException, TimeoutException {
+    public long joinChannel(ChannelSubscriptionInfo channel) throws IOException, TimeoutException {
         long hash;
         int channelId;
         if (channel.getChannelType().equals(ChannelType.PRIVATE)) {
@@ -210,14 +240,15 @@ public class ChannelService {
         channel.setAccessHash(hash);
 
         incrementMemberCount(channel.getId());
-        saveChannelMember(channel.getId(), ((DbApiStorage) api.getState()).getPhoneNumber());
-        listenerQueue.publish(new ChannelJoinedEvent(channel));
+        saveChannelMember(channel.getId(), ((DbApiStorage) api.getState()).getPhoneNumber(), hash);
+        listenerQueue.publish(new ChannelJoinedEvent(channel, api));
+        return hash;
     }
 
-    public void leaveChannel(ChannelSubscriptionInfo channel) throws IOException, TimeoutException {
+    public void leaveChannel(int id, int channelId, long accessHash) throws IOException, TimeoutException {
         TLInputChannel inputChannel = new TLInputChannel();
-        inputChannel.setChannelId(channel.getChannelId());
-        inputChannel.setAccessHash(channel.getAccessHash());
+        inputChannel.setChannelId(channelId);
+        inputChannel.setAccessHash(accessHash);
         TLRequestChannelsLeaveChannel leaveChannel = new TLRequestChannelsLeaveChannel();
         leaveChannel.setChannel(inputChannel);
         try {
@@ -226,15 +257,11 @@ public class ChannelService {
             Logger.e(TAG, e);
             throw e;
         }
-        removeChannelMember(channel.getId(), ((DbApiStorage) api.getState()).getPhoneNumber());
-        decrementMember(channel.getId());
+        removeChannelMember(channelId, ((DbApiStorage) api.getState()).getPhoneNumber());
+        decrementMember(id);
         // TODO s_tayari: @s_tayari 4/17/2018 raise event here?
     }
 
-
-    public void setListenerQueue(ListenerQueue listenerQueue) {
-        this.listenerQueue = listenerQueue;
-    }
 
     public void setApi(TelegramApi api) {
         this.api = api;

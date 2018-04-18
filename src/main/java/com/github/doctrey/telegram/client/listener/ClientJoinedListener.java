@@ -2,22 +2,19 @@ package com.github.doctrey.telegram.client.listener;
 
 import com.github.doctrey.telegram.client.facade.GroupService;
 import com.github.doctrey.telegram.client.listener.event.ClientJoinedEvent;
-import org.telegram.api.engine.TelegramApi;
 
 /**
  * Created by s_tayari on 4/15/2018.
  */
-public class ClientJoinedListener implements Listener<ClientJoinedEvent> {
+public class ClientJoinedListener extends AbstractListener<ClientJoinedEvent> {
 
     private static final String TAG = "ClientJoinedListener";
 
-    private TelegramApi api;
     private GroupService groupService;
 
-    public ClientJoinedListener(TelegramApi api) {
-        this.api = api;
-        groupService = new GroupService();
-        groupService.setApi(api);
+    public ClientJoinedListener(ListenerQueue listenerQueue) {
+        super(listenerQueue);
+        this.groupService = new GroupService(listenerQueue);
     }
 
     @Override
@@ -27,11 +24,8 @@ public class ClientJoinedListener implements Listener<ClientJoinedEvent> {
 
     @Override
     public void inform(ClientJoinedEvent event) {
+        groupService.setApi(event.getApi());
         groupService.joinAdminGroups();
     }
 
-    public void setApi(TelegramApi api) {
-        this.api = api;
-        groupService.setApi(api);
-    }
 }

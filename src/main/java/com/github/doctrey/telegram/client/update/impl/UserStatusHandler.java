@@ -1,15 +1,11 @@
 package com.github.doctrey.telegram.client.update.impl;
 
-import com.github.doctrey.telegram.client.AbstractRpcCallback;
 import com.github.doctrey.telegram.client.listener.ListenerQueue;
-import com.github.doctrey.telegram.client.update.AbsUpdateHandler;
 import org.telegram.api.engine.TelegramApi;
 import org.telegram.api.functions.users.TLRequestUsersGetFullUser;
 import org.telegram.api.input.user.TLInputUser;
 import org.telegram.api.update.TLUpdateUserStatus;
 import org.telegram.api.updates.TLUpdateShort;
-import org.telegram.api.user.TLUser;
-import org.telegram.api.user.TLUserFull;
 import org.telegram.api.user.status.TLAbsUserStatus;
 import org.telegram.api.user.status.TLUserStatusOffline;
 import org.telegram.api.user.status.TLUserStatusOnline;
@@ -19,8 +15,8 @@ import org.telegram.api.user.status.TLUserStatusOnline;
  */
 public class UserStatusHandler extends AbstractAbsUpdateHandler<TLUpdateShort, TLUpdateUserStatus> {
 
-    public UserStatusHandler(ListenerQueue listenerQueue) {
-        super(listenerQueue);
+    public UserStatusHandler(TelegramApi api, ListenerQueue listenerQueue) {
+        super(api, listenerQueue);
     }
 
     @Override

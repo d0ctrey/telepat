@@ -26,6 +26,10 @@ public class SecurityService {
     private ListenerQueue listenerQueue;
     private TelegramApi api;
 
+    public SecurityService(ListenerQueue listenerQueue) {
+        this.listenerQueue = listenerQueue;
+    }
+
     // TODO: 4/16/18 make this work later. Refer to telegram android app.
     public void setTelegramPassword(String password) {
         TLAccountPasswordInputSettings inputSettings = new TLAccountPasswordInputSettings();
@@ -68,9 +72,5 @@ public class SecurityService {
 
     public void setApi(TelegramApi api) {
         this.api = api;
-    }
-
-    public void setListenerQueue(ListenerQueue listenerQueue) {
-        this.listenerQueue = listenerQueue;
     }
 }
