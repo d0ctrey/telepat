@@ -5,7 +5,7 @@ package com.github.doctrey.telegram.client.subscription;
  */
 public enum ChannelSubscriptionStatus {
 
-    PENDING(1), VERIFIED(2), VERIFIED_COMPLETE(3), EXPIRED(4), ERROR(5);
+    PENDING(1), VERIFIED(2), VERIFIED_COMPLETE(3), EXPIRED(4), INACTIVE(5);
 
     private int code;
 
@@ -24,6 +24,6 @@ public enum ChannelSubscriptionStatus {
                 return status;
         }
 
-        return ERROR;
+        return INACTIVE;
     }
 }

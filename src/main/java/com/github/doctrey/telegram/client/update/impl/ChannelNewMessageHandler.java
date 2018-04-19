@@ -1,24 +1,11 @@
 package com.github.doctrey.telegram.client.update.impl;
 
-import com.github.doctrey.telegram.client.DbApiStorage;
-import com.github.doctrey.telegram.client.facade.ChannelService;
-import com.github.doctrey.telegram.client.facade.MessageService;
 import com.github.doctrey.telegram.client.listener.ListenerQueue;
-import com.github.doctrey.telegram.client.subscription.ChannelSubscriptionInfo;
-import org.telegram.api.chat.TLAbsChat;
-import org.telegram.api.chat.channel.TLChannel;
+import com.github.doctrey.telegram.client.listener.event.NewChannelMessageUpdate;
 import org.telegram.api.engine.TelegramApi;
-import org.telegram.api.message.TLAbsMessage;
-import org.telegram.api.message.TLMessage;
-import org.telegram.api.peer.TLAbsPeer;
 import org.telegram.api.update.TLUpdateChannelNewMessage;
 import org.telegram.api.update.TLUpdateNewMessage;
 import org.telegram.api.updates.TLUpdates;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 
 /**
@@ -26,17 +13,9 @@ import java.util.Optional;
  */
 public class ChannelNewMessageHandler extends AbstractAbsUpdateHandler<TLUpdates, TLUpdateChannelNewMessage> {
 
-    private MessageService messageService;
-    private ChannelService channelService;
-    private List<ChannelSubscriptionInfo> channelWhiteList;
 
     public ChannelNewMessageHandler(TelegramApi api, ListenerQueue listenerQueue) {
         super(api, listenerQueue);
-        channelWhiteList = new ArrayList<>();
-        messageService = new MessageService(listenerQueue);
-        channelService = new ChannelService(listenerQueue);
-        Map<Integer, Long> joinedChannels = channelService.findJoinedChannels(((DbApiStorage) api.getState()).getPhoneNumber());
-        joinedChannels.forEach((id, hash) -> channelWhiteList.add(channelService.findChannel(id)));
     }
 
     @Override
@@ -46,20 +25,8 @@ public class ChannelNewMessageHandler extends AbstractAbsUpdateHandler<TLUpdates
 
     @Override
     public void processUpdate(TLUpdates updatesContext, TLUpdateChannelNewMessage updateChannelNewMessage) {
-        TLAbsMessage absMessage = updateChannelNewMessage.getMessage();
-        if (absMessage instanceof TLMessage) {
-            TLMessage message = (TLMessage) absMessage;
-            TLAbsPeer toId = message.getToId();
-            if (channelWhiteList.stream().noneMatch(channel -> channel.getChannelId() == toId.getId()))
-                return;
-            TLChannel channel = (TLChannel) findChannel(updatesContext, toId.getId());
-            messageService.setApi(api);
-            messageService.markChannelHistoryAsRead(updateChannelNewMessage.getMessage(), channel);
-        }
-    }
-
-    private TLAbsChat findChannel(TLUpdates updates, int channelId) {
-        Optional<TLAbsChat> first = updates.getChats().stream().filter(x -> x.getId() == channelId).findFirst();
-        return first.orElse(null);
+        NewChannelMessageUpdate channelMessageUpdate = new NewChannelMessageUpdate(updateChannelNewMessage, api);
+        channelMessageUpdate.setUpdateContext(updatesContext);
+        listenerQueue.publish(channelMessageUpdate);
     }
 }

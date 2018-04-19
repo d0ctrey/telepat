@@ -18,7 +18,6 @@ public class ChannelSubscriptionInfo {
     private String publicLink;
     private ChannelSubscriptionStatus subscriptionStatus;
     private int maxMember;
-    private long accessHash;
 
     public int getId() {
         return id;
@@ -106,13 +105,5 @@ public class ChannelSubscriptionInfo {
 
     public void setMaxMember(int maxMember) {
         this.maxMember = maxMember;
-    }
-
-    public long getAccessHash() {
-        return accessHash;
-    }
-
-    public void setAccessHash(long accessHash) {
-        this.accessHash = accessHash;
     }
 }

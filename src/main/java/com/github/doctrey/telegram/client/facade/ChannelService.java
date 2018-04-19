@@ -1,8 +1,6 @@
 package com.github.doctrey.telegram.client.facade;
 
-import com.github.doctrey.telegram.client.DbApiStorage;
 import com.github.doctrey.telegram.client.listener.ListenerQueue;
-import com.github.doctrey.telegram.client.listener.event.ChannelJoinedEvent;
 import com.github.doctrey.telegram.client.subscription.ChannelSubscriptionInfo;
 import com.github.doctrey.telegram.client.subscription.ChannelSubscriptionStatus;
 import com.github.doctrey.telegram.client.subscription.ChannelType;
@@ -53,13 +51,25 @@ public class ChannelService {
         }
     }
 
-    public void updateChannelIdAndHash(ChannelSubscriptionInfo channel) {
+    public void updateChannelId(int id, int channelId) {
         try (Connection connection = ConnectionPool.getInstance().getConnection();
-             PreparedStatement statement = connection.prepareStatement("UPDATE tl_channels SET channel_id = ?, access_hash = ? WHERE id = ?")
+             PreparedStatement statement = connection.prepareStatement("UPDATE tl_channels SET channel_id = ? WHERE id = ?")
         ) {
-            statement.setInt(1, channel.getChannelId());
-            statement.setLong(2, channel.getAccessHash());
-            statement.setInt(3, channel.getId());
+            statement.setInt(1, channelId);
+            statement.setInt(2, id);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            Logger.e(TAG, e);
+        }
+    }
+
+    public void updateAccessHash(int id, String phoneNumber, long accessHash) {
+        try (Connection connection = ConnectionPool.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement("UPDATE tl_channel_members SET access_hash = ? WHERE channels_id = ? AND phone_number = ?")
+        ) {
+            statement.setLong(1, accessHash);
+            statement.setInt(2, id);
+            statement.setString(3, phoneNumber);
             statement.executeUpdate();
         } catch (SQLException e) {
             Logger.e(TAG, e);
@@ -167,7 +177,7 @@ public class ChannelService {
     public void saveChannelMember(int channelId, String phoneNumber, long hash) {
         try (
                 Connection conn = ConnectionPool.getInstance().getConnection();
-                PreparedStatement statement = conn.prepareStatement("INSERT INTO tl_channel_members VALUES (?, ?, ?)")
+                PreparedStatement statement = conn.prepareStatement("INSERT INTO tl_channel_members(channels_id, phone_number, access_hash) VALUES (?, ?, ?)")
         ) {
             statement.setInt(1, channelId);
             statement.setString(2, phoneNumber);
@@ -191,7 +201,7 @@ public class ChannelService {
         }
     }
 
-    public long joinChannel(ChannelSubscriptionInfo channel) throws IOException, TimeoutException {
+    public Map<ChannelSubscriptionInfo, Long> joinChannel(ChannelSubscriptionInfo channel) throws IOException, TimeoutException {
         long hash;
         int channelId;
         if (channel.getChannelType().equals(ChannelType.PRIVATE)) {
@@ -237,12 +247,7 @@ public class ChannelService {
         }
 
         channel.setChannelId(channelId);
-        channel.setAccessHash(hash);
-
-        incrementMemberCount(channel.getId());
-        saveChannelMember(channel.getId(), ((DbApiStorage) api.getState()).getPhoneNumber(), hash);
-        listenerQueue.publish(new ChannelJoinedEvent(channel, api));
-        return hash;
+        return Collections.singletonMap(channel, hash);
     }
 
     public void leaveChannel(int id, int channelId, long accessHash) throws IOException, TimeoutException {
@@ -257,9 +262,6 @@ public class ChannelService {
             Logger.e(TAG, e);
             throw e;
         }
-        removeChannelMember(channelId, ((DbApiStorage) api.getState()).getPhoneNumber());
-        decrementMember(id);
-        // TODO s_tayari: @s_tayari 4/17/2018 raise event here?
     }
 
 

@@ -6,9 +6,9 @@ import org.telegram.api.engine.TelegramApi;
 /**
  * Created by Soheil on 4/17/18.
  */
-public class ChannelJoinedEvent extends AbstractEvent<ChannelSubscriptionInfo> {
+public class NewChannelToJoinEvent extends AbstractEvent<ChannelSubscriptionInfo> {
 
-    public ChannelJoinedEvent(ChannelSubscriptionInfo eventObject, TelegramApi api) {
+    public NewChannelToJoinEvent(ChannelSubscriptionInfo eventObject, TelegramApi api) {
         super(eventObject, api);
     }
 }

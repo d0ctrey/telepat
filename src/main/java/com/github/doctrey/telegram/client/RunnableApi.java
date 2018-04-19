@@ -2,7 +2,7 @@ package com.github.doctrey.telegram.client;
 
 import com.github.doctrey.telegram.client.api.ApiConstants;
 import com.github.doctrey.telegram.client.listener.*;
-import com.github.doctrey.telegram.client.subscription.ChannelSubscriptionTimer;
+import com.github.doctrey.telegram.client.subscription.ChannelExpirationTimer;
 import com.github.doctrey.telegram.client.update.AbsUpdatesHandler;
 import com.github.doctrey.telegram.client.update.UpdateQueue;
 import com.github.doctrey.telegram.client.update.impl.*;
@@ -67,8 +67,9 @@ public class RunnableApi implements Runnable {
         }
 
         listenerQueue.getListeners().addAll(Arrays.asList(
-                new ChannelJoinedListener(listenerQueue),
-                new MessageViewedListener(listenerQueue)
+                new ChannelJoinListener(listenerQueue),
+                new MessageViewedListener(listenerQueue),
+                new ChannelExpiredListener(listenerQueue)
         ));
 
         TLRequestUsersGetFullUser getFullUser = new TLRequestUsersGetFullUser();
@@ -83,7 +84,7 @@ public class RunnableApi implements Runnable {
         });
 
 
-        ChannelSubscriptionTimer subscriptionTimer = new ChannelSubscriptionTimer(api, listenerQueue);
+        ChannelExpirationTimer subscriptionTimer = new ChannelExpirationTimer(api, listenerQueue);
         subscriptionTimer.startCheckingSubscriptions();
         /*ClientJoinedListener joinedListenerService = new ClientJoinedListener(api);
         joinedListenerService.inform(new TLInputPeerSelf());*/

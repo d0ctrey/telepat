@@ -1,8 +1,8 @@
 package com.github.doctrey.telegram.client.listener;
 
 import com.github.doctrey.telegram.client.AbstractRpcCallback;
-import com.github.doctrey.telegram.client.facade.ChannelService;
-import com.github.doctrey.telegram.client.listener.event.ChannelJoinedEvent;
+import com.github.doctrey.telegram.client.DbApiStorage;
+import com.github.doctrey.telegram.client.listener.event.NewChannelToJoinEvent;
 import com.github.doctrey.telegram.client.subscription.ChannelSubscriptionInfo;
 import com.github.doctrey.telegram.client.util.ConnectionPool;
 import com.github.doctrey.telegram.client.util.MessageUtils;
@@ -11,28 +11,25 @@ import org.telegram.api.functions.messages.TLRequestMessagesSendMessage;
 import org.telegram.api.input.peer.TLInputPeerChat;
 import org.telegram.api.updates.TLAbsUpdates;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Created by Soheil on 4/16/18.
  */
-public class ChannelJoinedListener extends AbstractListener<ChannelJoinedEvent> {
+public class ChannelJoinListener extends AbstractChannelListener<NewChannelToJoinEvent> {
 
-    private static final String TAG = "ChannelJoinedListener";
+    private static final String TAG = "ChannelJoinListener";
 
     private int groupIdToPost;
-    private List<ChannelSubscriptionInfo> joinedChannels;
-    private ChannelService channelService;
 
-    public ChannelJoinedListener(ListenerQueue listenerQueue) {
+    public ChannelJoinListener(ListenerQueue listenerQueue) {
         super(listenerQueue);
-        this.joinedChannels = new ArrayList<>();
-        channelService = new ChannelService(listenerQueue);
 
         try (Connection connection = ConnectionPool.getInstance().getConnection();
              PreparedStatement statement = connection.prepareStatement("SELECT group_id FROM tl_admin_groups WHERE group_type = ?")) {
@@ -49,13 +46,27 @@ public class ChannelJoinedListener extends AbstractListener<ChannelJoinedEvent> 
 
 
     @Override
-    public Class<ChannelJoinedEvent> getEventClass() {
-        return ChannelJoinedEvent.class;
+    public Class<NewChannelToJoinEvent> getEventClass() {
+        return NewChannelToJoinEvent.class;
     }
 
     @Override
-    public void inform(ChannelJoinedEvent event) {
+    public void inform(NewChannelToJoinEvent event) {
+        if(!channelListInitialized)
+            initializedChannelList(event.getApi());
+
         assert groupIdToPost != 0;
+
+        try {
+            Map<ChannelSubscriptionInfo, Long> joinedChannel = channelService.joinChannel(event.getEventObject());
+            channelService.saveChannelMember(event.getEventObject().getId(), ((DbApiStorage) event.getApi().getState()).getPhoneNumber(), joinedChannel.get(event.getEventObject()));
+            channelService.incrementMemberCount(event.getEventObject().getId());
+            channelService.updateChannelId(event.getEventObject().getId(), event.getEventObject().getChannelId());
+            channelWhiteList.putAll(joinedChannel);
+        } catch (IOException | TimeoutException e) {
+            Logger.e(TAG, e);
+            return;
+        }
 
         TLInputPeerChat inputPeerChat = new TLInputPeerChat();
         inputPeerChat.setChatId(groupIdToPost);
@@ -70,11 +81,5 @@ public class ChannelJoinedListener extends AbstractListener<ChannelJoinedEvent> 
 
             }
         });
-
-        if(!joinedChannels.contains(event.getEventObject())) {
-            joinedChannels.add(event.getEventObject());
-
-            channelService.updateChannelIdAndHash(event.getEventObject());
-        }
     }
 }
