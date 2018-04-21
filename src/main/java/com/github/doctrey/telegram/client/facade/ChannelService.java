@@ -94,6 +94,26 @@ public class ChannelService {
         }
     }
 
+    public Map<Integer, List<String>> findJoinedChannels() {
+        Map<Integer, List<String>> joinedChannels = new HashMap<>();
+        try (Connection connection = ConnectionPool.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement("SELECT channels_id, phone_number FROM tl_channel_members");
+             ResultSet rs = statement.executeQuery()) {
+            while (rs.next()) {
+                int channelId = rs.getInt(1);
+                if(joinedChannels.containsKey(channelId))
+                    joinedChannels.get(channelId).add(rs.getString(2));
+                else
+                    joinedChannels.put(channelId, new ArrayList<>());
+            }
+
+            return joinedChannels;
+        } catch (SQLException e) {
+            Logger.e(TAG, e);
+            return Collections.emptyMap();
+        }
+    }
+
     public ChannelSubscriptionInfo findChannel(int id) {
         try (Connection connection = ConnectionPool.getInstance().getConnection();
              PreparedStatement statement = connection.prepareStatement("SELECT * FROM tl_channels WHERE id = ?")) {
@@ -122,11 +142,11 @@ public class ChannelService {
         return null;
     }
 
-    public List<ChannelSubscriptionInfo> findAllPendingChannels() {
+    public List<ChannelSubscriptionInfo> findByStatus(ChannelSubscriptionStatus subscriptionStatus) {
         List<ChannelSubscriptionInfo> subscriptionInfoList = new ArrayList<>();
         try (Connection connection = ConnectionPool.getInstance().getConnection();
              PreparedStatement statement = connection.prepareStatement("SELECT * FROM tl_channels WHERE status = ?")) {
-            statement.setInt(1, ChannelSubscriptionStatus.VERIFIED.getCode());
+            statement.setInt(1, subscriptionStatus.getCode());
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
                     ChannelSubscriptionInfo info = new ChannelSubscriptionInfo();
@@ -191,7 +211,7 @@ public class ChannelService {
     public void removeChannelMember(int channelId, String phoneNumber) {
         try (
                 Connection conn = ConnectionPool.getInstance().getConnection();
-                PreparedStatement statement = conn.prepareStatement("DELETE FROM tl_channel_members VALUES (?, ?)")
+                PreparedStatement statement = conn.prepareStatement("DELETE FROM tl_channel_members WHERE channels_id = ? AND phone_number = ?")
         ) {
             statement.setInt(1, channelId);
             statement.setString(2, phoneNumber);
@@ -264,8 +284,20 @@ public class ChannelService {
         }
     }
 
+    public void updateMemberCount(int id, int memberCount) {
+        try (Connection connection = ConnectionPool.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement("UPDATE tl_channels SET member_count = ? WHERE id = ?")
+        ) {
+            statement.setInt(1, memberCount);
+            statement.setInt(2, id);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            Logger.e(TAG, e);
+        }
+    }
 
     public void setApi(TelegramApi api) {
         this.api = api;
     }
+
 }

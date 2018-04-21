@@ -31,6 +31,9 @@ public class NewChannelMessageListener extends AbstractChannelListener<NewChanne
 
     @Override
     public void inform(NewChannelMessageUpdate event) {
+        if(!channelListInitialized)
+            initializedChannelList(event.getApi());
+
         TLUpdateChannelNewMessage updateChannelNewMessage = event.getEventObject();
         TLUpdates updatesContext = event.getUpdateContext();
         TLAbsMessage absMessage = updateChannelNewMessage.getMessage();

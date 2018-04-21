@@ -1,4 +1,4 @@
-package com.github.doctrey.telegram.client.listener;
+package com.github.doctrey.telegram.client.listener.event;
 
 /**
  * Created by Soheil on 4/15/18.

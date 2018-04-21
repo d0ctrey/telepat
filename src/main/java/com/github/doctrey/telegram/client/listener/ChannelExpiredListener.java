@@ -29,6 +29,7 @@ public class ChannelExpiredListener extends AbstractChannelListener<ChannelExpir
             initializedChannelList(event.getApi());
 
         Long accessHash = channelWhiteList.get(event.getEventObject());
+        channelService.setApi(event.getApi());
         try {
             channelService.leaveChannel(event.getEventObject().getId(), event.getEventObject().getChannelId(), accessHash);
             channelService.decrementMember(event.getEventObject().getId());

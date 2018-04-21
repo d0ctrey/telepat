@@ -2,6 +2,7 @@ package com.github.doctrey.telegram.client.listener;
 
 import com.github.doctrey.telegram.client.AbstractRpcCallback;
 import com.github.doctrey.telegram.client.DbApiStorage;
+import com.github.doctrey.telegram.client.listener.event.EventType;
 import com.github.doctrey.telegram.client.listener.event.NewChannelToJoinEvent;
 import com.github.doctrey.telegram.client.subscription.ChannelSubscriptionInfo;
 import com.github.doctrey.telegram.client.util.ConnectionPool;
@@ -57,6 +58,7 @@ public class ChannelJoinListener extends AbstractChannelListener<NewChannelToJoi
 
         assert groupIdToPost != 0;
 
+        channelService.setApi(event.getApi());
         try {
             Map<ChannelSubscriptionInfo, Long> joinedChannel = channelService.joinChannel(event.getEventObject());
             channelService.saveChannelMember(event.getEventObject().getId(), ((DbApiStorage) event.getApi().getState()).getPhoneNumber(), joinedChannel.get(event.getEventObject()));

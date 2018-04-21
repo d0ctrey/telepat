@@ -34,14 +34,14 @@ public class ConnectionPool {
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException(e);
         }
-        String username = dbUri.getUserInfo().split(":")[0];
-        String password = dbUri.getUserInfo().split(":")[1];
+//        String username = dbUri.getUserInfo().split(":")[0];
+//        String password = dbUri.getUserInfo().split(":")[1];
         String dbUrl = "jdbc:postgresql://" + dbUri.getHost() + ':' + dbUri.getPort() + dbUri.getPath();
 
         PGPoolingDataSource source = new PGPoolingDataSource();
         source.setUrl(dbUrl);
-        source.setUser(username);
-        source.setPassword(password);
+//        source.setUser(username);
+//        source.setPassword(password);
         source.setMaxConnections(20);
         this.dataSource = source;
     }

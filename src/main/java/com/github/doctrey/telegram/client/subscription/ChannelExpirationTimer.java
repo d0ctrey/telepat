@@ -1,5 +1,7 @@
 package com.github.doctrey.telegram.client.subscription;
 
+import com.github.doctrey.telegram.client.ApiStorage;
+import com.github.doctrey.telegram.client.DbApiStorage;
 import com.github.doctrey.telegram.client.facade.ChannelService;
 import com.github.doctrey.telegram.client.listener.ListenerQueue;
 import com.github.doctrey.telegram.client.listener.event.ChannelExpiredEvent;
@@ -7,6 +9,7 @@ import org.telegram.api.engine.TelegramApi;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -31,13 +34,14 @@ public class ChannelExpirationTimer {
         channelService.setApi(api);
     }
 
-    public void startCheckingSubscriptions() {
+    public void startCheckingExpiration() {
         timerThread.scheduleAtFixedRate(() -> {
-            List<ChannelSubscriptionInfo> allPendingChannels = channelService.findAllPendingChannels();
-            allPendingChannels.forEach(channel -> {
+            Map<Integer, Long> channelMap = channelService.findJoinedChannels(((DbApiStorage) api.getState()).getPhoneNumber());
+            channelMap.forEach((channelId, hash) -> {
+                ChannelSubscriptionInfo channel = channelService.findChannel(channelId)  ;
                 if (channel.getPlanExpiration().before(new Date()))
                     listenerQueue.publish(new ChannelExpiredEvent(channel, api));
             });
-        }, 5000, 1 * 60 * 1000, TimeUnit.MILLISECONDS);
+        }, 20000, 1 * 60 * 1000, TimeUnit.MILLISECONDS);
     }
 }

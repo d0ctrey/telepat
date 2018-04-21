@@ -6,6 +6,7 @@ import com.github.doctrey.telegram.client.listener.event.Event;
 import com.github.doctrey.telegram.client.subscription.ChannelSubscriptionInfo;
 import org.telegram.api.engine.TelegramApi;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -23,6 +24,7 @@ public abstract class AbstractChannelListener<T extends Event> extends AbstractL
     }
 
     protected void initializedChannelList(TelegramApi api) {
+        channelWhiteList = new HashMap<>();
         Map<Integer, Long> joinedChannels = channelService.findJoinedChannels(((DbApiStorage) api.getState()).getPhoneNumber());
         joinedChannels.forEach((id, hash) -> channelWhiteList.put(channelService.findChannel(id), hash));
         channelListInitialized = true;

@@ -1,6 +1,7 @@
 package com.github.doctrey.telegram.client.listener;
 
 import com.github.doctrey.telegram.client.AbstractRpcCallback;
+import com.github.doctrey.telegram.client.listener.event.EventType;
 import com.github.doctrey.telegram.client.listener.event.MessageViewedEvent;
 import com.github.doctrey.telegram.client.util.ConnectionPool;
 import com.github.doctrey.telegram.client.util.MessageUtils;

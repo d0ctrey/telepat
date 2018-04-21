@@ -106,4 +106,19 @@ public class ChannelSubscriptionInfo {
     public void setMaxMember(int maxMember) {
         this.maxMember = maxMember;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ChannelSubscriptionInfo that = (ChannelSubscriptionInfo) o;
+
+        return id == that.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return id;
+    }
 }

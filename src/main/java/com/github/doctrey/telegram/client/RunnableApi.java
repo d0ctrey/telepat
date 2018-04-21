@@ -20,12 +20,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeoutException;
 
 /**
  * Created by Soheil on 2/16/18.
  */
-public class RunnableApi implements Runnable {
+public class RunnableApi implements Callable<TelegramApi> {
 
     private static final String TAG = "RunnableApi";
 
@@ -38,7 +39,7 @@ public class RunnableApi implements Runnable {
     }
 
     @Override
-    public void run() {
+    public TelegramApi call() {
         if(api == null) {
             DbApiStorage apiStateStorage = new DbApiStorage(phoneNumber);
             DefaultApiCallback apiCallback = new DefaultApiCallback();
@@ -67,9 +68,9 @@ public class RunnableApi implements Runnable {
         }
 
         listenerQueue.getListeners().addAll(Arrays.asList(
-                new ChannelJoinListener(listenerQueue),
                 new MessageViewedListener(listenerQueue),
-                new ChannelExpiredListener(listenerQueue)
+                new ChannelExpiredListener(listenerQueue),
+                new NewChannelMessageListener(listenerQueue)
         ));
 
         TLRequestUsersGetFullUser getFullUser = new TLRequestUsersGetFullUser();
@@ -85,12 +86,13 @@ public class RunnableApi implements Runnable {
 
 
         ChannelExpirationTimer subscriptionTimer = new ChannelExpirationTimer(api, listenerQueue);
-        subscriptionTimer.startCheckingSubscriptions();
+        subscriptionTimer.startCheckingExpiration();
         /*ClientJoinedListener joinedListenerService = new ClientJoinedListener(api);
         joinedListenerService.inform(new TLInputPeerSelf());*/
 
         /*executorService = Executors.newSingleThreadScheduledExecutor();
         executorService.scheduleAtFixedRate(() -> processUpdates(new TLUpdatesTooLong()), 5, 30, TimeUnit.SECONDS);*/
+        return api;
     }
 
     public void setPhoneNumber(String phoneNumber) {
