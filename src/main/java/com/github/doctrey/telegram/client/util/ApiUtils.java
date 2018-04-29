@@ -32,7 +32,7 @@ public class ApiUtils {
         DbApiStorage apiStateStorage = new DbApiStorage(phoneNumber);
         DefaultApiCallback apiCallback = new DefaultApiCallback();
         TelegramApi api = new TelegramApi(apiStateStorage, new AppInfo(ApiConstants.API_ID,
-                System.getenv("TL_DEVICE_MODEL"), System.getenv("TL_DEVICE_VERSION"), "0.0.1", "en"), apiCallback);
+                "device-" + MessageUtils.generateRandomAlphaNumeric(8), "1.0", "0.0.1", "en"), apiCallback);
 
         List<AbsUpdatesHandler> updatesHandlers = new ArrayList<>();
         updatesHandlers.add(new UpdatesHandler(Arrays.asList(new ChannelNewMessageHandler(api, listenerQueue))));

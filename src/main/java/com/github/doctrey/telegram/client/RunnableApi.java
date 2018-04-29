@@ -6,6 +6,7 @@ import com.github.doctrey.telegram.client.subscription.ChannelExpirationTimer;
 import com.github.doctrey.telegram.client.update.AbsUpdatesHandler;
 import com.github.doctrey.telegram.client.update.UpdateQueue;
 import com.github.doctrey.telegram.client.update.impl.*;
+import com.github.doctrey.telegram.client.util.MessageUtils;
 import org.telegram.api.engine.AppInfo;
 import org.telegram.api.engine.Logger;
 import org.telegram.api.engine.TelegramApi;
@@ -44,7 +45,7 @@ public class RunnableApi implements Callable<TelegramApi> {
             DbApiStorage apiStateStorage = new DbApiStorage(phoneNumber);
             DefaultApiCallback apiCallback = new DefaultApiCallback();
             api = new TelegramApi(apiStateStorage, new AppInfo(ApiConstants.API_ID,
-                    System.getenv("TL_DEVICE_MODEL"), System.getenv("TL_DEVICE_VERSION"), "0.0.1", "en"), apiCallback);
+                    "device-" + MessageUtils.generateRandomAlphaNumeric(8), "1.0", "0.0.1", "en"), apiCallback);
 
             // creating handlers
             List<AbsUpdatesHandler> updatesHandlers = new ArrayList<>();
