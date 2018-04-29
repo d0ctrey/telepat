@@ -34,6 +34,7 @@ public class ConnectionPool {
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException(e);
         }
+        System.out.println("==============================>" + dbUri.getUserInfo());
         String username = dbUri.getUserInfo().split(":")[0];
 //        String password = dbUri.getUserInfo().split(":")[1];
         String dbUrl = "jdbc:postgresql://" + dbUri.getHost() + ':' + dbUri.getPort() + dbUri.getPath();
