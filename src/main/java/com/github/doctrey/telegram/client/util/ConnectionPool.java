@@ -35,13 +35,13 @@ public class ConnectionPool {
             throw new IllegalArgumentException(e);
         }
         String username = dbUri.getUserInfo().split(":")[0];
-        String password = dbUri.getUserInfo().split(":")[1];
+//        String password = dbUri.getUserInfo().split(":")[1];
         String dbUrl = "jdbc:postgresql://" + dbUri.getHost() + ':' + dbUri.getPort() + dbUri.getPath();
 
         PGPoolingDataSource source = new PGPoolingDataSource();
         source.setUrl(dbUrl);
         source.setUser(username);
-        source.setPassword(password);
+//        source.setPassword(password);
         source.setMaxConnections(20);
         this.dataSource = source;
     }
